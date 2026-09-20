@@ -1,0 +1,43 @@
+name: Publish OmniAI to APT index
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Pull OmniAI debs from publish branch
+        run: |
+          set -euo pipefail
+          git fetch origin cursor/publish-omniai-1-0-0-8f42
+          git checkout origin/cursor/publish-omniai-1-0-0-8f42 -- \
+            dist/com.kolby.omniai_1.0.0_iphoneos-arm64.deb \
+            dist/com.kolby.omniai_1.0.0_iphoneos-arm64e.deb
+          ls -la dist/com.kolby.omniai*
+          md5sum dist/com.kolby.omniai*
+
+      - name: Refresh Packages index
+        run: python3 scripts/apt_add_omniai.py
+
+      - name: Commit and push to main
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add dist/com.kolby.omniai_1.0.0_iphoneos-arm64.deb \
+                  dist/com.kolby.omniai_1.0.0_iphoneos-arm64e.deb \
+                  Packages Packages.gz Packages.bz2 Packages.xz Release
+          git status
+          git diff --cached --stat
+          git commit -m "Publish OmniAI 1.0.0 into Sileo APT index on main"
+          git push origin HEAD:main
