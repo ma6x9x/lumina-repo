@@ -1,19 +1,19 @@
-Origin: Lumina Repo
-Label: Lumina Repo
+Origin: KDotz Repo
+Label: KDotz Repo
 Suite: stable
 Version: 1.0
-Codename: lumina
+Codename: kdotz
 Architectures: iphoneos-arm64 iphoneos-arm64e
 Components: main
-Description: Lumina Repo - tweaks by ma6x9x (rootless + roothide)
-Date: Sat, 08 Aug 2026 03:40:48 +0000
+Description: KDotz Repo — tweaks by Kolby (rootless + roothide)
+Date: Sun, 20 Sep 2026 23:12:17 +0000
 MD5Sum:
- 9c3fd4175a285d7d9403e1d253a24dd9 34407 Packages
- 8f09d844a05af93e3a24b219027c537d 7151 Packages.gz
- bb5e1866303b4943bd4719e1b2def531 7044 Packages.bz2
- e0577e1d2962d63b683e17c82b4371a1 6496 Packages.xz
+ c1035ab20c444ec8d64d89e80d23b247 35749 Packages
+ a4c2c2627e2fd27fe256913f2152d253 7474 Packages.gz
+ 030731e36c43bd8bfc9c86370ee35fcf 7387 Packages.bz2
+ 2d8f513093ee3d7a6df015ff6afa32e0 6788 Packages.xz
 SHA256:
- cc3081a856c1c1f46e2bedc5c213ce92a4709d2ae9e008b9e827351eb16021c1 34407 Packages
- 03b2626d257d6db919bb17291c7f4efc7e89b9c79200651978129f2c69c90ac5 7151 Packages.gz
- 8c93f51d8bc02c449cda7800db85429887697d77ee854078efecd048d29401a8 7044 Packages.bz2
- ae13c616a6cab8c2b97446af786fcfea528b876b7acaa083cbfa6c27094e1f48 6496 Packages.xz
+ 0810b7bf49d3ce7f8168baf0389dacea668927d13088384457cb7630fbbd2a87 35749 Packages
+ 0a0a91737f2962e679ca9574f58ff73180e860cc6479b17ce18c549e19efbcf3 7474 Packages.gz
+ 9365ca5d7a6b21f22eb7d9e5cc9dc7f9261462f670b5b515c0aadc4e3fe8f7f1 7387 Packages.bz2
+ 7c95eea08b172471bc43e633536e3f009a61fe607524f730db74475d0537f029 6788 Packages.xz

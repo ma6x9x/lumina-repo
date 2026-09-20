@@ -270,6 +270,44 @@ Description: iOS 26-style Control Center for iOS 15–17. 1.0.8 restores the rou
 Author: kolbymaxx
 Name: CC27
 
+Package: com.kolby.omniai
+Version: 1.0.0
+Architecture: iphoneos-arm64
+Maintainer: kolbymaxx
+Installed-Size: 560
+Depends: mobilesubstrate, preferenceloader, firmware (>= 16.0)
+Conflicts: com.kolby.grokagent
+Replaces: com.kolby.grokagent
+Provides: com.kolby.grokagent
+Filename: dist/com.kolby.omniai_1.0.0_iphoneos-arm64.deb
+Size: 76032
+MD5sum: e40355b23d804bbf4001f278ff1dd59d
+SHA1: cf33945fc4de63b55fb306fa60ca1fd7379fa8ec
+SHA256: 750a86c84f6ec8214544ad58e56330e0335444fc761ca0f9e2256357ce24e377
+Section: Tweaks
+Description: System-wide AI for iOS 16–18 — text selection + on-screen awareness with Grok, Claude, and Gemini web login.
+Author: kolbymaxx
+Name: OmniAI
+
+Package: com.kolby.omniai
+Version: 1.0.0
+Architecture: iphoneos-arm64e
+Maintainer: kolbymaxx
+Installed-Size: 560
+Depends: mobilesubstrate, preferenceloader, firmware (>= 16.0)
+Conflicts: com.kolby.grokagent
+Replaces: com.kolby.grokagent
+Provides: com.kolby.grokagent
+Filename: dist/com.kolby.omniai_1.0.0_iphoneos-arm64e.deb
+Size: 76342
+MD5sum: f779619b4b610892f461ba0e863b4aa3
+SHA1: 6c7581b291af59e410ad66f93a452bf4a8aa77d5
+SHA256: c53c9449452807e486ae7a054a1a3261619a279aa0e0ff533f4d5945041c29b8
+Section: Tweaks
+Description: System-wide AI for iOS 16–18 — text selection + on-screen awareness with Grok, Claude, and Gemini web login.
+Author: kolbymaxx
+Name: OmniAI
+
 Package: com.kolby.rhcompat
 Version: 1.0.2
 Architecture: iphoneos-arm64e
