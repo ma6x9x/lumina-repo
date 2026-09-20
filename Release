@@ -1,11 +1,11 @@
-Origin: KDotz Repo
-Label: KDotz Repo
+Origin: Lumina Repo
+Label: Lumina Repo
 Suite: stable
 Version: 1.0
-Codename: kdotz
+Codename: lumina
 Architectures: iphoneos-arm64 iphoneos-arm64e
 Components: main
-Description: KDotz Repo — tweaks by Kolby (rootless + roothide)
+Description: Lumina Repo - tweaks by Kolby (rootless + roothide)
 Date: Sun, 20 Sep 2026 23:12:17 +0000
 MD5Sum:
  c1035ab20c444ec8d64d89e80d23b247 35749 Packages
