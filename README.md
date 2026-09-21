@@ -1,7 +1,7 @@
-# Lumina Repo
+# Lum1na Repo
 
 <p align="center">
-  <img src="repo-site/logo.png" width="128" height="128" alt="Lumina Repo logo">
+  <img src="repo-site/logo.png" width="128" height="128" alt="Lum1na Repo logo">
 </p>
 
 <p align="center">
@@ -17,7 +17,7 @@
 https://ma6x9x.github.io/lumina-repo/
 ```
 
-Same URL works in Zebra. Origin / label: **Lumina Repo**.
+Same URL works in Zebra. Origin / label: **Lum1na Repo**.
 
 Sileo installs the right build for your jailbreak (`iphoneos-arm64` on Dopamine, `iphoneos-arm64e` on RootHide). If you still have an old KDotz source, remove it, add this one, then refresh.
 

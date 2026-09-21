@@ -24,15 +24,15 @@ filesize() {
 }
 
 {
-  echo "Origin: Lumina Repo"
-  echo "Label: Lumina Repo"
+  echo "Origin: Lum1na Repo"
+  echo "Label: Lum1na Repo"
   echo "Suite: stable"
   echo "Version: 1.0"
   echo "Codename: lumina"
   # iphoneos-arm64 = Dopamine / rootless; iphoneos-arm64e = RootHide (Relaxin')
   echo "Architectures: iphoneos-arm64 iphoneos-arm64e"
   echo "Components: main"
-  echo "Description: Lumina Repo - tweaks by ma6x9x (rootless + roothide)"
+  echo "Description: Lum1na Repo - tweaks by ma6x9x (rootless + roothide)"
   echo "Date: $(date -Ru)"
   echo "MD5Sum:"
   for f in "${INDEX_FILES[@]}"; do
