@@ -5,15 +5,15 @@ Version: 1.0
 Codename: lumina
 Architectures: iphoneos-arm64 iphoneos-arm64e
 Components: main
-Description: Lumina Repo - tweaks by Kolby (rootless + roothide)
-Date: Sun, 20 Sep 2026 23:12:17 +0000
+Description: Lumina Repo - tweaks by ma6x9x (rootless + roothide)
+Date: Mon, 12 Oct 2026 16:40:06 -0400
 MD5Sum:
- c1035ab20c444ec8d64d89e80d23b247 35749 Packages
- a4c2c2627e2fd27fe256913f2152d253 7474 Packages.gz
- 030731e36c43bd8bfc9c86370ee35fcf 7387 Packages.bz2
- 2d8f513093ee3d7a6df015ff6afa32e0 6788 Packages.xz
+ 82867686cd72dabe691a7dc84b03fd24 36513 Packages
+ 8978f84749ca34bb6c2b79ebabad82e3 7889 Packages.gz
+ c9d9f2f007338adb7f8365ccce61c171 7734 Packages.bz2
+ 66aaaad06887189a17a4f2ab38453412 7136 Packages.xz
 SHA256:
- 0810b7bf49d3ce7f8168baf0389dacea668927d13088384457cb7630fbbd2a87 35749 Packages
- 0a0a91737f2962e679ca9574f58ff73180e860cc6479b17ce18c549e19efbcf3 7474 Packages.gz
- 9365ca5d7a6b21f22eb7d9e5cc9dc7f9261462f670b5b515c0aadc4e3fe8f7f1 7387 Packages.bz2
- 7c95eea08b172471bc43e633536e3f009a61fe607524f730db74475d0537f029 6788 Packages.xz
+ 3dbaaa448e4cd79e3c46b03dff0e06e0e0a8df21124e25496cfe943eab1563c9 36513 Packages
+ 9ec6547398acbc0c22ccf5da2c6f930743da0c19bf48900357c6d3c188ef36a8 7889 Packages.gz
+ 55f1f2ef4a6f55bc084f006c7da70bf19bebbdd9269e8165c9d18f3360de8f35 7734 Packages.bz2
+ 2cf95d0ad2f0c86934be3d1361386f687c945f695e4eb68296fdcb625f8238c4 7136 Packages.xz

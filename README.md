@@ -29,6 +29,7 @@ Sileo installs the right build for your jailbreak (`iphoneos-arm64` on Dopamine,
 | **Music27** | Apple Music Liquid Glass UI for iOS 16/17 — floating glass dock, artwork color themes, library pins. |
 | **CC27** | iOS 26-style Control Center for iOS 15–17 — edit mode, add-control gallery, glass modules. Needs CCSupport. |
 | **OmniAI** | System-wide AI (Grok / Claude / Gemini) + screen context. Replaces GrokAgent. |
+| **Lum1na-FKT** | Lab primitive testbed (`com.kolbymaxx.lum1nafkt`) — kread dump workbench + ANE read/write-door primitives. Rootless (Dopamine) arm64. |
 | **RHCompat** | RootHide-only Settings / PreferenceLoader companion. Use **1.0.2+** (1.0.1 could black-screen). |
 
 ## Credits

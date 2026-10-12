@@ -1,0 +1,102 @@
+name: Build Lum1na-FKT
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'Lum1naFKT/**'
+      - '.github/workflows/build-lum1nafkt.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-lum1nafkt
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build rootless .deb
+    runs-on: macos-14
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install build deps
+        run: |
+          brew install ldid dpkg make
+          echo "$(brew --prefix make)/libexec/gnubin" >> "$GITHUB_PATH"
+
+      - name: Setup Theos
+        uses: waruhachi/theos-action@v2.4.6
+        with:
+          theos-src: 'theos/theos'
+          theos-branch: 'master'
+          sdks-src: 'theos/sdks'
+          sdks-branch: 'master'
+          libgcuniversal: 'false'
+          altlist: 'false'
+
+      - name: Select Xcode
+        run: |
+          sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+          xcodebuild -version
+          xcrun -sdk iphoneos --show-sdk-version
+
+      - name: Build Lum1na-FKT (rootless)
+        working-directory: Lum1naFKT
+        env:
+          THEOS: ${{ env.THEOS }}
+        run: |
+          set -euo pipefail
+          SDK_VER="$(ls "$THEOS/sdks" | sed -n 's/iPhoneOS\([0-9.]*\)\.sdk/\1/p' | sort -V | tail -1 || true)"
+          if [ -n "${SDK_VER:-}" ]; then
+            sed -i '' "s/^TARGET :=.*/TARGET := iphone:clang:${SDK_VER}:15.0/" Makefile tweak/Makefile app/Makefile helper/Makefile
+            echo "Using SDK $SDK_VER"
+          fi
+          # Dopamine dpkg cannot unpack lzma data.tar — keep gzip (exported in Makefile too)
+          make clean package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless
+          echo "Built packages:"
+          ls -lah packages || true
+          mkdir -p "$GITHUB_WORKSPACE/out"
+          find . -name '*.deb' -path '*/packages/*' -print -exec cp {} "$GITHUB_WORKSPACE/out/" \;
+          ls -lah "$GITHUB_WORKSPACE/out"
+
+      - name: Publish to dist/ + APT index
+        run: |
+          set -euo pipefail
+          git config user.name  "kolbymaxx"
+          git config user.email "your-noreply@users.noreply.github.com"
+          NEW_DEBS=$(ls out/*.deb)
+          for deb in $NEW_DEBS; do
+            cp "$deb" dist/
+          done
+          # Remove previous versions of this package from dist (keep latest only)
+          for deb in $NEW_DEBS; do
+            pkgid="$(dpkg-deb -f "$deb" Package)"
+            for old in dist/${pkgid}_*.deb; do
+              [ -e "$old" ] || continue
+              base="$(basename "$deb")"
+              [ "$(basename "$old")" = "$base" ] && continue
+              git rm -q --cached "$old" 2>/dev/null || true
+              rm -f "$old"
+            done
+          done
+          scripts/update-apt-repo.sh
+          git add dist Packages Packages.gz Packages.bz2 Packages.xz Release
+          if git diff --cached --quiet; then
+            echo "No changes to publish"
+          else
+            git commit -m "Publish Lum1na-FKT $(dpkg-deb -f $(ls out/*.deb | head -1) Version)"
+            git push origin main
+          fi
+
+      - name: Upload .deb artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Lum1naFKT-rootless-deb
+          path: out/*.deb
+          if-no-files-found: error

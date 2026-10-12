@@ -1,0 +1,9 @@
+Package: com.kolbymaxx.lum1nafkt
+Name: Lum1na-FKT
+Depends: mobilesubstrate, firmware (>= 15.0)
+Version: 0.9.0
+Architecture: iphoneos-arm64
+Description: Lab primitive testbed — 21D50 twin FIELD# workbench, ANE y-craft read/write doors, 23F77 leftover catalog. Now targets the A13 reference rig (iPhone12,1 / 18.6.2 / Dopamine 3.0) alongside the 12 mini. Not a KRW. Dump → /var/mobile/Documents/lum1na-fkt-dump.txt
+Maintainer: Kolby K <kolbymaxx0@gmail.com>
+Author: Kolby K <kolbymaxx0@gmail.com>
+Section: Tweaks

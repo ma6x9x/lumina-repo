@@ -1,0 +1,18 @@
+#!/bin/bash
+# rootless: setuid dump helper (Dopamine KRW requires uid 0) + refresh icon
+HELPER=""
+for c in /var/jb/usr/bin/lumina-fkt-dump /usr/bin/lumina-fkt-dump; do
+  if [ -f "$c" ]; then HELPER="$c"; break; fi
+done
+if [ -n "$HELPER" ]; then
+  chown root:wheel "$HELPER" 2>/dev/null || true
+  chmod 4755 "$HELPER" 2>/dev/null || true
+  ls -l "$HELPER" || true
+fi
+if [ -x /var/jb/usr/bin/uicache ]; then
+  /var/jb/usr/bin/uicache -p /var/jb/Applications/LuminaFKTApp.app 2>/dev/null || true
+elif [ -x /usr/bin/uicache ]; then
+  /usr/bin/uicache -p /Applications/LuminaFKTApp.app 2>/dev/null || true
+  /usr/bin/uicache -p /var/jb/Applications/LuminaFKTApp.app 2>/dev/null || true
+fi
+exit 0
