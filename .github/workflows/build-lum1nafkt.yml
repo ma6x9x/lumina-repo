@@ -85,7 +85,7 @@ jobs:
               rm -f "$old"
             done
           done
-          scripts/update-apt-repo.sh
+          scripts/update-apt-repo.sh 2>/dev/null || python3 scripts/apt_reindex.py
           git add dist Packages Packages.gz Packages.bz2 Packages.xz Release
           if git diff --cached --quiet; then
             echo "No changes to publish"
