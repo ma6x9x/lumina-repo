@@ -515,20 +515,20 @@ SHA1: c2a1986902cf2240763d8f3dac06e15e3ed04766
 SHA256: 60272717336d1efafdef810bcdc6211be4c107f9ca1bf3d0ce8b712e159f499e
 
 Package: com.kolbymaxx.lum1nafkt
-Version: 0.9.0-1+debug
+Version: 0.9.0
 Architecture: iphoneos-arm64
 Maintainer: Kolby K <kolbymaxx0@gmail.com>
-Installed-Size: 1508
+Installed-Size: 1260
 Depends: mobilesubstrate, firmware (>= 15.0)
 Section: Tweaks
 Description: Lab primitive testbed — 21D50 twin FIELD# workbench, ANE y-craft read/write doors, 23F77 leftover catalog. Now targets the A13 reference rig (iPhone12,1 / 18.6.2 / Dopamine 3.0) alongside the 12 mini. Not a KRW. Dump → /var/mobile/Documents/lum1na-fkt-dump.txt
 Author: Kolby K <kolbymaxx0@gmail.com>
 Name: Lum1na-FKT
-Filename: dist/com.kolbymaxx.lum1nafkt_0.9.0-1+debug_iphoneos-arm64.deb
-Size: 511380
-MD5sum: dba29366806a46a7969e1f0b8d2fea8d
-SHA1: 815c0cc8e3b894233784a69e4ea69ba6b183f4c4
-SHA256: 3295f0ab86518528d69658876d14ca1b839c716c5ac301f6e6f09e018ad2d953
+Filename: dist/com.kolbymaxx.lum1nafkt_0.9.0_iphoneos-arm64.deb
+Size: 380198
+MD5sum: 8d980a284e68f217fb191deef5db3927
+SHA1: b1c32a036585f33fb57be2686462207b55095a1e
+SHA256: 5153153fd1f1d0d9889579c287b3aa1b69f9a1583bcf735df8c990d8a49f668d
 
 Package: com.music27.tweak
 Version: 1.0.2
