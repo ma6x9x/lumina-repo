@@ -1,0 +1,137 @@
+name: Build Sk1n
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'Sk1n/**'
+      # Sk1n compiles SPKit as shared source, so a change there is a change
+      # to this tweak's binary.
+      - 'SPKit/**'
+      - '.github/workflows/build-sk1n.yml'
+
+jobs:
+  build:
+    name: Build rootless .deb
+    runs-on: macos-14
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate skins
+        run: python3 Sk1n/tools/validate-skins.py
+
+      - name: Install build deps
+        run: |
+          brew install ldid dpkg make
+          echo "$(brew --prefix make)/libexec/gnubin" >> "$GITHUB_PATH"
+
+      - name: Setup Theos
+        uses: waruhachi/theos-action@v2.4.6
+        with:
+          theos-src: 'theos/theos'
+          theos-branch: 'master'
+          sdks-src: 'theos/sdks'
+          sdks-branch: 'master'
+          libgcuniversal: 'false'
+          altlist: 'false'
+
+      - name: Select Xcode
+        run: |
+          sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+          xcodebuild -version
+          xcrun -sdk iphoneos --show-sdk-version
+
+      - name: Build Sk1n (rootless)
+        working-directory: Sk1n
+        env:
+          THEOS: ${{ env.THEOS }}
+        run: |
+          set -euo pipefail
+          SDK_VER="$(ls "$THEOS/sdks" | sed -n 's/iPhoneOS\([0-9.]*\)\.sdk/\1/p' | sort -V | tail -1 || true)"
+          if [ -n "${SDK_VER:-}" ]; then
+            sed -i '' "s/^TARGET :=.*/TARGET := iphone:clang:${SDK_VER}:15.0/" Makefile
+            echo "Using SDK $SDK_VER"
+          fi
+          sed -i '' 's/^Architecture: .*/Architecture: iphoneos-arm64/' control
+          make clean package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless
+          echo "Built packages:"
+          ls -lah packages || ls -lah ../packages || true
+          mkdir -p "$GITHUB_WORKSPACE/out"
+          find . .. -name '*.deb' -path '*/packages/*' -print -exec cp {} "$GITHUB_WORKSPACE/out/" \;
+          ls -lah "$GITHUB_WORKSPACE/out"
+
+      - name: Upload .deb artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Sk1n-rootless-deb
+          path: out/*.deb
+          if-no-files-found: error
+
+  build-roothide:
+    name: Build roothide .deb
+    runs-on: macos-14
+    timeout-minutes: 45
+    # Blocking: both packages must build. (theos-action's cache-key step can flake
+    # with an x509 error on api.github.com; re-run the failed job if so.)
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install build deps
+        run: |
+          brew install ldid dpkg make
+          echo "$(brew --prefix make)/libexec/gnubin" >> "$GITHUB_PATH"
+
+      - name: Setup Theos (roothide fork)
+        uses: waruhachi/theos-action@v2.4.6
+        with:
+          theos-src: 'roothide/theos'
+          theos-branch: 'master'
+          sdks-src: 'theos/sdks'
+          sdks-branch: 'master'
+          libgcuniversal: 'false'
+          altlist: 'false'
+
+      - name: Select Xcode
+        run: |
+          sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+          xcodebuild -version
+          xcrun -sdk iphoneos --show-sdk-version
+
+      - name: Build Sk1n (roothide)
+        working-directory: Sk1n
+        env:
+          THEOS: ${{ env.THEOS }}
+        run: |
+          set -euo pipefail
+          SDK_VER="$(ls "$THEOS/sdks" | sed -n 's/iPhoneOS\([0-9.]*\)\.sdk/\1/p' | sort -V | tail -1 || true)"
+          if [ -n "${SDK_VER:-}" ]; then
+            sed -i '' "s/^TARGET :=.*/TARGET := iphone:clang:${SDK_VER}:15.0/" Makefile
+            echo "Using SDK $SDK_VER"
+          fi
+          # roothide packages use the arm64e architecture tag
+          sed -i '' 's/^Architecture: .*/Architecture: iphoneos-arm64e/' control
+          make clean package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=roothide
+          echo "Built packages:"
+          ls -lah packages || ls -lah ../packages || true
+          mkdir -p "$GITHUB_WORKSPACE/out"
+          find . .. -name '*.deb' -path '*/packages/*' -print -exec cp {} "$GITHUB_WORKSPACE/out/" \;
+          ls -lah "$GITHUB_WORKSPACE/out"
+          DEB="$(ls "$GITHUB_WORKSPACE/out"/*.deb | head -1)"
+          dpkg-deb -I "$DEB"
+          dpkg-deb -c "$DEB" | head -30
+          if dpkg-deb -c "$DEB" | grep -q ' var/jb/'; then
+            echo "ERROR: roothide deb still contains /var/jb paths" >&2
+            exit 1
+          fi
+
+      - name: Upload .deb artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Sk1n-roothide-deb
+          path: out/*.deb
+          if-no-files-found: error
