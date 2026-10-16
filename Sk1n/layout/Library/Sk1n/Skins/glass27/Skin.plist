@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>colors</key>
+	<dict>
+		<key>dockBottom</key>
+		<string>#FFFFFF1A</string>
+		<key>dockTop</key>
+		<string>#FFFFFF1A</string>
+		<key>label</key>
+		<string>#FFFFFF</string>
+		<key>tint</key>
+		<string>#0A84FF</string>
+	</dict>
+	<key>era</key>
+	<string>glass27</string>
+	<key>fonts</key>
+	<dict>
+		<key>label</key>
+		<dict>
+			<key>name</key>
+			<string>.SFUI-Medium</string>
+			<key>size</key>
+			<integer>11</integer>
+		</dict>
+	</dict>
+	<key>iconsDirectory</key>
+	<string>Icons</string>
+	<key>id</key>
+	<string>glass27</string>
+	<key>lockscreen</key>
+	<dict>
+		<key>style</key>
+		<string>slide</string>
+		<key>text</key>
+		<string>slide to unlock</string>
+	</dict>
+	<key>name</key>
+	<string>iOS 26 (Liquid Glass)</string>
+	<key>slider</key>
+	<dict>
+		<key>shimmer</key>
+		<true/>
+		<key>style</key>
+		<string>glass27</string>
+		<key>text</key>
+		<string>slide to unlock</string>
+		<key>textColor</key>
+		<string>#FFFFFFE6</string>
+	</dict>
+	<key>sounds</key>
+	<dict/>
+	<key>version</key>
+	<string>0.1.0</string>
+</dict>
+</plist>
