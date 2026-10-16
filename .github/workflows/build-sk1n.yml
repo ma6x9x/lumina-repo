@@ -123,8 +123,10 @@ jobs:
           ls -lah "$GITHUB_WORKSPACE/out"
           DEB="$(ls "$GITHUB_WORKSPACE/out"/*.deb | head -1)"
           dpkg-deb -I "$DEB"
-          dpkg-deb -c "$DEB" | head -30
-          if dpkg-deb -c "$DEB" | grep -q ' var/jb/'; then
+          # (write to a file: `| head` under pipefail dies of SIGPIPE on big packages)
+          dpkg-deb -c "$DEB" > "$RUNNER_TEMP/deb-contents.txt"
+          head -40 "$RUNNER_TEMP/deb-contents.txt" || true
+          if grep -q ' var/jb/' "$RUNNER_TEMP/deb-contents.txt"; then
             echo "ERROR: roothide deb still contains /var/jb paths" >&2
             exit 1
           fi
