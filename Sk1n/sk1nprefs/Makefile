@@ -11,7 +11,7 @@ Sk1nPrefs_FILES = Sk1nRootListController.m shared/Sk1nRespring.m shared/spkit/SP
 Sk1nPrefs_FRAMEWORKS = UIKit Foundation CoreFoundation
 Sk1nPrefs_PRIVATE_FRAMEWORKS = Preferences
 Sk1nPrefs_INSTALL_PATH = /Library/PreferenceBundles
-Sk1nPrefs_CFLAGS = -fobjc-arc -I$(THEOS_PROJECT_DIR)/shared -I$(THEOS_PROJECT_DIR)/shared/spkit -DSPK_CLASS_PREFIX=Sk1nPrefsSPK
+Sk1nPrefs_CFLAGS = -fobjc-arc -Ishared -Ishared/spkit -DSPK_CLASS_PREFIX=Sk1nPrefsSPK
 
 include $(THEOS_MAKE_PATH)/bundle.mk
 
