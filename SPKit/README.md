@@ -98,6 +98,6 @@ stays 1, which is the only combination that hides and still hit-tests.
 | Tweak | Status |
 |-------|--------|
 | Music27 | 1.1.34 — jbroot resolver, prefs paths, status log and overlay window all removed in favour of SPKit. **Device-verified**: `overlay_created` frame and level, `dock_created`, `install_ok` and `album_controls` are identical to 1.1.33 on iOS 17.3 |
-| SwiftPeek | pending |
+| SwiftPeek | partial — `SPKRuntime` + `SPKIconArtwork` compiled in (claude/swiftpeek-spk-icon-artwork); prefs/tracing still its own `SPPrefs` |
 | CC27 | pending — four jbroot copies to collapse |
 | Siri27 | pending |

@@ -7,12 +7,16 @@ on:
     paths:
       - 'SwiftPeek/**'
       - 'tools/swiftpeek/**'
+      # SwiftPeek compiles SPKit as shared source (SPKIconArtwork), so a change
+      # there is a change to this tweak's binary.
+      - 'SPKit/**'
       - 'scripts/check-swiftpeek-version.sh'
       - '.github/workflows/build-swiftpeek.yml'
   pull_request:
     paths:
       - 'SwiftPeek/**'
       - 'tools/swiftpeek/**'
+      - 'SPKit/**'
       - 'scripts/check-swiftpeek-version.sh'
       - '.github/workflows/build-swiftpeek.yml'
 
