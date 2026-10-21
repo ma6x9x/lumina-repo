@@ -1,6 +1,7 @@
 #import "SPIconPeek.h"
 #import "SPRenderPeek.h"
 #import "SPPrefs.h"
+#import "SPKIconArtwork.h"
 #import <objc/runtime.h>
 #import <objc/message.h>
 
@@ -17,28 +18,18 @@ BOOL SPIconPeekAvailable(void) {
 }
 
 NSArray<NSString *> *SPIconThemeSearchPaths(void) {
-    NSString *jb = SPJailbreakRootPrefix() ?: @"";
-    NSArray *rel = @[
-        @"/Library/Themes",
-        @"/Library/Application Support/SnowBoard/Themes",
-        @"/Library/Application Support/SBHUDEnabler",  // harmless if absent
-    ];
-    NSMutableArray *out = [NSMutableArray array];
-    for (NSString *r in rel) {
-        if (jb.length) [out addObject:[jb stringByAppendingString:r]];
-        [out addObject:[@"/var/jb" stringByAppendingString:r]];
-        [out addObject:r];
-    }
-    return out;
+    // Delegates to SPKit: Sk1n's icon engine resolves the same paths, so the
+    // two tweaks cannot drift apart on where a themer's art lives.
+    return SPKIconThemeSearchPaths();
 }
 
-/// Look for `<theme>/IconBundles/<bundleid>.png` (and the @2x/@3x variants that
-/// SnowBoard and Anemone both understand). First hit wins, same as the runtime
-/// order a themer would see.
+/// SnowBoard / Anemone bundled artwork: `<theme>/IconBundles/<bundleid>.png`
+/// (and the @2x/@3x variants), first hit wins, same as the runtime order a
+/// themer would see. The search paths come from SPKit; only the inventory's
+/// need for a path (not a decoded image) keeps this walk local.
 static NSString *SPThemeOverridePathForBundle(NSString *bundleID) {
     if (bundleID.length == 0) return nil;
     NSFileManager *fm = NSFileManager.defaultManager;
-    NSArray *suffixes = @[ @"@3x.png", @"@2x.png", @".png" ];
 
     for (NSString *root in SPIconThemeSearchPaths()) {
         BOOL isDir = NO;
@@ -47,7 +38,7 @@ static NSString *SPThemeOverridePathForBundle(NSString *bundleID) {
         for (NSString *theme in themes) {
             NSString *bundlesDir = [[root stringByAppendingPathComponent:theme]
                                     stringByAppendingPathComponent:@"IconBundles"];
-            for (NSString *suffix in suffixes) {
+            for (NSString *suffix in @[@"@3x.png", @"@2x.png", @".png"]) {
                 NSString *candidate = [bundlesDir stringByAppendingPathComponent:
                                        [bundleID stringByAppendingString:suffix]];
                 if ([fm fileExistsAtPath:candidate]) return candidate;
@@ -57,27 +48,12 @@ static NSString *SPThemeOverridePathForBundle(NSString *bundleID) {
     return nil;
 }
 
-/// `+[UIImage _applicationIconImageForBundleIdentifier:format:scale:]` — UIKit
-/// private, present on every iOS 9…18 build, renders straight from the app
-/// bundle. Format 2 is the home screen size. Called through a typed
-/// `objc_msgSend` cast because the selector takes an int + CGFloat.
+/// `+[UIImage _applicationIconImageForBundleIdentifier:format:scale:]` — the
+/// device-verified extraction, now in SPKit (`SPKRealIconForBundleID`, format
+/// 2, home-screen size, guarded typed cast). Sk1n's icon engine renders the
+/// same call, so inventory and tweak see the same artwork.
 static UIImage *SPIconImageForBundle(NSString *bundleID) {
-    static SEL sel;
-    static dispatch_once_t once;
-    dispatch_once(&once, ^{
-        sel = NSSelectorFromString(@"_applicationIconImageForBundleIdentifier:format:scale:");
-    });
-    if (!sel || ![UIImage respondsToSelector:sel]) return nil;
-
-    UIImage *(*send)(id, SEL, id, int, CGFloat) =
-        (UIImage *(*)(id, SEL, id, int, CGFloat))objc_msgSend;
-    UIImage *image = nil;
-    @try {
-        image = send([UIImage class], sel, bundleID, 2, UIScreen.mainScreen.scale);
-    } @catch (__unused id e) {
-        return nil;
-    }
-    return image;
+    return SPKRealIconForBundleID(bundleID);
 }
 
 /// Installed applications via LSApplicationWorkspace. Read-only, and it does not

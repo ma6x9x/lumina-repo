@@ -22,9 +22,16 @@ SwiftPeek_FILES = src/SPAttach.m \
 	src/SPDumpWriter.m \
 	src/SPFieldWalk.m \
 	src/SPRenderPeek.m \
-	src/SPIconPeek.m
+	src/SPIconPeek.m \
+	src/spkit/SPKRuntime.m \
+	src/spkit/SPKIconArtwork.m
 
-SwiftPeek_CFLAGS = -fobjc-arc -Wno-deprecated-declarations -Wno-unused-variable -Wno-unused-function -DDISABLE_ROOTLESS_COMPAT_WARNING=1
+# SPKit shared source (Sk1nIconEngine and SPIconPeek must not drift apart):
+# SPKIconArtwork needs SPKRuntime's SPKJailbreakRoot. src/spkit is a symlink
+# to ../../SPKit - a literal ../ in _FILES makes Theos write objects outside
+# .theos/obj. -DSPK_CLASS_PREFIX unique per consumer (two dylibs, one process).
+SwiftPeek_CFLAGS = -fobjc-arc -Wno-deprecated-declarations -Wno-unused-variable -Wno-unused-function -DDISABLE_ROOTLESS_COMPAT_WARNING=1 \
+	-I$(THEOS_PROJECT_DIR)/src/spkit -DSPK_CLASS_PREFIX=SwiftPeekSPK
 SwiftPeek_FRAMEWORKS = UIKit Foundation CoreGraphics
 
 include $(THEOS_MAKE_PATH)/tweak.mk
