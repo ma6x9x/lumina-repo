@@ -28,7 +28,6 @@ static NSArray<NSString *> *Sk1nPageControlClassNames(void) {
 static void Sk1nStyleBadge(UIView *badge, Sk1nSkin *skin) {
     CALayer *layer = badge.layer;
     CGFloat h = MAX(1.0, badge.bounds.size.height);
-    UIColor *tint = [skin colorNamed:@"tint" fallback:nil];
     switch (skin.era) {
         case Sk1nEraIOS1: {
             // iOS 1-6: bright red pill with a raised look — deep red body and
@@ -57,9 +56,8 @@ static void Sk1nStyleBadge(UIView *badge, Sk1nSkin *skin) {
             break;
         }
     }
-    (void)tint;
     // The badge label: white for the legacy eras, tint-tinted white for glass.
-    for (UIView *sub in [badge.subviews array]) {
+    for (UIView *sub in badge.subviews) {
         UILabel *label = nil;
         if ([sub isKindOfClass:UILabel.class]) label = (UILabel *)sub;
         else if ([sub respondsToSelector:@selector(textLabel)])
@@ -77,13 +75,11 @@ static void Sk1nStyleBadge(UIView *badge, Sk1nSkin *skin) {
 #pragma mark - Page dot styling
 
 static void Sk1nStylePageControl(UIView *pc, Sk1nSkin *skin) {
-    UIColor *tint = [skin colorNamed:@"tint" fallback:nil];
+    UIColor *tint = [skin colorNamed:@"tint" fallback:[UIColor clearColor]];
     // Walk the dot subviews (image views / small views) and tint them. The
     // stock colour comes back untouched if this view is not what we think.
-    NSUInteger i = 0;
     for (UIView *sub in pc.subviews) {
         if (sub.bounds.size.width < 2 || sub.bounds.size.height > 30) continue;
-        i++;
         switch (skin.era) {
             case Sk1nEraIOS1:
             case Sk1nEraIOS7:

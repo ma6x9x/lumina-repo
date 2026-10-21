@@ -2,7 +2,7 @@
 
 #define SK1N_DOMAIN @"com.kolby.sk1n"
 #define SK1N_SUBDIR @"Sk1n"   // <jbroot>/var/mobile/Library/Sk1n/{DISABLE,status.log}
-#define SK1N_VERSION @"0.1.0"
+#define SK1N_VERSION @"0.2.0"
 
 NS_ASSUME_NONNULL_BEGIN
 
