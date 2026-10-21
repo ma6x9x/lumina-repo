@@ -39,7 +39,7 @@ NSArray<NSString *> *SPKIconThemeSearchPaths(void) {
         @"/Library/Themes",
         @"/Library/Application Support/SnowBoard/Themes",
     ];
-    NSMutableOrderedSet *out = [NSMutableOrderedSet set];
+    NSMutableOrderedSet *out = [NSMutableOrderedSet orderedSet];
     for (NSString *r in rel) {
         if (jb.length) [out addObject:[jb stringByAppendingString:r]];
         [out addObject:[@"/var/jb" stringByAppendingString:r]];
