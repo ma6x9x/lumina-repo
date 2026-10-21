@@ -9,6 +9,7 @@
 #import "Sk1nSkinStore.h"
 #import "Sk1nIconEngine.h"
 #import "Sk1nDockPlate.h"
+#import "Sk1nUIChrome.h"
 #import "Sk1nLockScreen.h"
 
 static NSString *Sk1nSentinelPath(void) {
@@ -65,7 +66,13 @@ static void Sk1nInit(void) {
                     SPKTrace(@"skin_loaded", @{@"id": skin.skinID, @"era": Sk1nEraName(skin.era) ?: @"?"});
                     NSUInteger icons = Sk1nIconEngineInstall(skin);
                     BOOL dock = Sk1nDockPlateInstall(skin);
-                    SPKTrace(@"skin_applied", @{@"icon_hooks": @(icons).stringValue, @"dock_hook": dock ? @"1" : @"0"});
+                    NSUInteger badges = 0, dots = 0;
+                    @try {
+                        badges = Sk1nBadgeChromeInstall(skin);
+                        dots = Sk1nPageDotsInstall(skin);
+                    } @catch (__unused id ex) {}
+                    SPKTrace(@"skin_applied", @{@"icon_hooks": @(icons).stringValue, @"dock_hook": dock ? @"1" : @"0",
+                                                @"badge_hooks": @(badges).stringValue, @"pagedots_hooks": @(dots).stringValue});
                 }
             }
 

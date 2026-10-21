@@ -37,8 +37,22 @@ static Sk1nSkin *gDockSkin;
                 break;
             }
             case Sk1nEraGlass27: {
-                UIBlurEffect *eff = [UIBlurEffect effectWithStyle:UIBlurEffectStyleSystemUltraThinMaterial];
-                _blur = [[UIVisualEffectView alloc] initWithEffect:eff];
+                // iOS 26+: real UIGlassEffect found at runtime (same approach
+                // as the slider — the dylib still loads on older SDKs and the
+                // system material blur is the floor below iOS 26).
+                id eff = nil;
+                Class glassClass = NSClassFromString(@"UIGlassEffect");
+                if (glassClass) {
+                    @try {
+                        id candidate = [[glassClass alloc] init];
+                        if ([candidate isKindOfClass:UIVisualEffect.class]) {
+                            eff = candidate;
+                            @try { [eff setValue:@YES forKey:@"interactive"]; } @catch (__unused id ex) {}
+                        }
+                    } @catch (__unused id e) { eff = nil; }
+                }
+                if (!eff) eff = [UIBlurEffect effectWithStyle:UIBlurEffectStyleSystemUltraThinMaterial];
+                _blur = [[UIVisualEffectView alloc] initWithEffect:(UIVisualEffect *)eff];
                 _blur.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
                 [self addSubview:_blur];
                 self.layer.borderWidth = 0.75;

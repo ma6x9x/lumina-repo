@@ -24,6 +24,7 @@ Sk1n_FILES = \
 	src/Sk1nSkinStore.m \
 	src/Sk1nIconEngine.m \
 	src/Sk1nDockPlate.m \
+	src/Sk1nUIChrome.m \
 	src/Sk1nSlideToUnlockView.m \
 	src/Sk1nLockScreen.m \
 	src/Sk1nRespring.m
