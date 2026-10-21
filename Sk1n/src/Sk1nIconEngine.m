@@ -1,23 +1,22 @@
 #import "Sk1nIconEngine.h"
 #import "Sk1nHook.h"
-#import "Sk1nPrefs.h"
 #import "Sk1nSkin.h"
 #import "SPKIconArtwork.h"
 #import "SPKRuntime.h"
 #import <objc/message.h>
 
-// Icon order per install, driven by the "Icon Flavor" pref:
+// Icon resolution is automatic, not a pref:
 //
-//   real (default)  UIKit's own render of the app's real icon, re-chromed
-//                   for the skin's era (gloss / flat / liquid glass). Every
-//                   app on the device is covered and each icon always reads
-//                   as the app it opens.
-//   mix             the skin's authored Icons/<bundle id>.png where present,
-//                   real+chrome for everything else.
-//   art             authored PNGs only (the 0.0 skin-flavor behaviour).
+//   1. authored  <skin>/Icons/<bundle id>.png — the skin's own (legacy-era)
+//                artwork, used whenever the skin ships an icon file;
+//   2. real      UIKit's own render of the app's real icon, re-chromed for
+//                the skin's era (SPKRealIconForBundleID) — covers every app
+//                the skin does not carry art for;
+//   3. themed    SnowBoard/Anemone IconBundles artwork as a last resort.
 //
-// The bundled `<skin>/Icons` set is therefore the optional "art" flavour,
-// never the default: a skin does not have to ship any artwork to look right.
+// Custom artwork is only ever consulted when the runtime has no file for the
+// app — the engine never draws its own icons.
+// The bundled `<skin>/Icons` set is the legacy flavour of each era.
 
 static Sk1nSkin *gSkin;
 static NSCache<NSString *, UIImage *> *gCache;
@@ -202,19 +201,14 @@ UIImage *Sk1nIconForBundleID(Sk1nSkin *skin, NSString *bundleID) {
     bundleID = Sk1nSafeBundleID(bundleID);
     if (!skin || !bundleID) return nil;
     if (!gCache) gCache = [[NSCache alloc] init];
-    NSString *flavor = Sk1nPrefIconFlavor();
-    NSString *key = [skin.skinID stringByAppendingFormat:@"|%@|%@", bundleID, flavor];
+    NSString *key = [skin.skinID stringByAppendingString:bundleID];
     UIImage *hit = [gCache objectForKey:key];
     if (hit) return hit;
 
-    UIImage *img = nil;
-    if ([flavor isEqualToString:@"art"]) {
-        img = Sk1nAuthoredIcon(skin, bundleID);
-    } else if ([flavor isEqualToString:@"mix"]) {
-        img = Sk1nAuthoredIcon(skin, bundleID) ?: Sk1nRuntimeIcon(skin, bundleID);
-    } else { // "real", the default
-        img = Sk1nRuntimeIcon(skin, bundleID);
-    }
+    // A skin-authored icon file always wins; real artwork only covers apps
+    // the skin does not carry an icon for.
+    UIImage *img = Sk1nAuthoredIcon(skin, bundleID);
+    if (!img) img = Sk1nRuntimeIcon(skin, bundleID);
     if (!img) return nil;
     [gCache setObject:img forKey:key];
     return img;

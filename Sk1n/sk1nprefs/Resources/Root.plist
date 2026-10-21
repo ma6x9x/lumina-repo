@@ -61,34 +61,6 @@
 		</dict>
 		<dict>
 			<key>cell</key>
-			<string>PSLinkListCell</string>
-			<key>default</key>
-			<string>real</string>
-			<key>defaults</key>
-			<string>com.kolby.sk1n</string>
-			<key>detail</key>
-			<string>PSListItemsController</string>
-			<key>footerText</key>
-			<string>Real Apps renders each app's own icon re-chromed for the era - covers every app. Mix uses the skin's built-in artwork where it has some. Art uses that artwork everywhere.</string>
-			<key>key</key>
-			<string>iconFlavor</string>
-			<key>label</key>
-			<string>Icon Source</string>
-			<key>validTitles</key>
-			<array>
-				<string>Real Apps (+ era chrome)</string>
-				<string>Mix (skin art + real)</string>
-				<string>Skin Art Only</string>
-			</array>
-			<key>validValues</key>
-			<array>
-				<string>real</string>
-				<string>mix</string>
-				<string>art</string>
-			</array>
-		</dict>
-		<dict>
-			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>footerText</key>
 			<string>EXPERIMENTAL and independent of the skin. Adds a slide-to-unlock bar to the lock screen and hides the "swipe up" hint. The unlock route could not be verified off-device; if it fails the slider snaps back. Off by default. "Disable swipe-up gesture" is riskier still: leave it off unless you have confirmed the slider unlocks your device (a Face ID device could otherwise be stuck on the lock screen; the kill switch file is the way out).</string>

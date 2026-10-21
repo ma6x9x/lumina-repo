@@ -65,7 +65,7 @@ static void Sk1nInit(void) {
                     SPKTrace(@"skin_loaded", @{@"id": skin.skinID, @"era": Sk1nEraName(skin.era) ?: @"?"});
                     NSUInteger icons = Sk1nIconEngineInstall(skin);
                     BOOL dock = Sk1nDockPlateInstall(skin);
-                    SPKTrace(@"skin_applied", @{@"icon_hooks": @(icons).stringValue, @"dock_hook": dock ? @"1" : @"0", @"icon_flavor": Sk1nPrefIconFlavor()});
+                    SPKTrace(@"skin_applied", @{@"icon_hooks": @(icons).stringValue, @"dock_hook": dock ? @"1" : @"0"});
                 }
             }
 

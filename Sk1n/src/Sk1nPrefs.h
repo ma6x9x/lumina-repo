@@ -14,9 +14,6 @@ NSString *Sk1nPrefActiveSkinID(void);
 BOOL Sk1nPrefSlideToUnlock(void);
 /// "auto" (match skin) | "ios1" | "ios7" | "glass27".
 NSString *Sk1nPrefSliderStyle(void);
-/// "real" (default, UIKit's own app artwork + era chrome) | "mix" |
-/// "art" (the skin's authored Icons set only).
-NSString *Sk1nPrefIconFlavor(void);
 /// Off by default, riskier: also disables the stock dismiss gestures.
 BOOL Sk1nPrefBlockSwipe(void);
 

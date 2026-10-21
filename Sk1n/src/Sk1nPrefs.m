@@ -12,4 +12,3 @@ static NSString *Sk1nPrefString(NSString *key, NSString *fallback) {
 }
 NSString *Sk1nPrefActiveSkinID(void) { return Sk1nPrefString(@"activeSkin", @"stock"); }
 NSString *Sk1nPrefSliderStyle(void) { return Sk1nPrefString(@"sliderStyle", @"auto"); }
-NSString *Sk1nPrefIconFlavor(void) { return Sk1nPrefString(@"iconFlavor", @"real"); }
