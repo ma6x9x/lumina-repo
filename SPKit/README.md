@@ -16,6 +16,15 @@ already depend on is permanent.
 |------|----------|
 | `SPKRuntime.h/.m` | `SPKJailbreakRoot` · `SPKRootedPath` · `SPKPrefBool` · `SPKPrefs` · `SPKKillSwitchEngaged` · `SPKTrace` |
 | `SPKOverlayWindow.h/.m` | `SPKOverlayWindow` — passthrough overlay window and bottom-strip sizing |
+| `SPKIconArtwork.h/.m` | `SPKRealIconForBundleID` · `SPKThemeIconForBundleID` · `SPKIconThemeSearchPaths` — read-only app artwork |
+
+`SPKIconArtwork` is the device-verified icon extraction from SwiftPeek's
+`SPIconPeek` (iPhone13,1 / iOS 17.3), pulled out to keep Sk1n's icon engine and
+SwiftPeek's inventory on one implementation. It renders the app's real home
+icon through UIKit's own `-[UIImage _applicationIconImageForBundleIdentifier:
+format:scale:]` (format 2) — **not** through `SBIconModel`, which is the read
+that made SwiftPeek 0.2.x dangerous — and resolves SnowBoard/Anemone
+`IconBundles` artwork by the same search order a themer's runtime sees.
 
 Nothing here is speculative. Every piece was written by hand at least twice
 before it was extracted: six near-identical copies of the jailbreak-root

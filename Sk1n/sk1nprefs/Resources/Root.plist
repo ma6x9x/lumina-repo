@@ -5,24 +5,45 @@
 	<key>items</key>
 	<array>
 		<dict>
-			<key>cell</key><string>PSGroupCell</string>
-			<key>label</key><string>Sk1n</string>
-			<key>footerText</key><string>Pick an era, then tap Apply &amp; Respring. Changes take effect after the respring. If SpringBoard ever misbehaves, SSH in and run: touch /var/jb/var/mobile/Library/Sk1n/DISABLE</string>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>footerText</key>
+			<string>Pick an era, then tap Apply &amp; Respring. Changes take effect after the respring. If SpringBoard ever misbehaves, SSH in and run: touch /var/jb/var/mobile/Library/Sk1n/DISABLE</string>
+			<key>label</key>
+			<string>Sk1n</string>
 		</dict>
 		<dict>
-			<key>cell</key><string>PSSwitchCell</string>
-			<key>default</key><true/>
-			<key>defaults</key><string>com.kolby.sk1n</string>
-			<key>key</key><string>enabled</string>
-			<key>label</key><string>Enable Sk1n</string>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.kolby.sk1n</string>
+			<key>key</key>
+			<string>enabled</string>
+			<key>label</key>
+			<string>Enable Sk1n</string>
 		</dict>
 		<dict>
-			<key>cell</key><string>PSLinkListCell</string>
-			<key>default</key><string>stock</string>
-			<key>defaults</key><string>com.kolby.sk1n</string>
-			<key>key</key><string>activeSkin</string>
-			<key>label</key><string>Active Skin</string>
-			<key>detail</key><string>PSListItemsController</string>
+			<key>cell</key>
+			<string>PSLinkListCell</string>
+			<key>default</key>
+			<string>stock</string>
+			<key>defaults</key>
+			<string>com.kolby.sk1n</string>
+			<key>detail</key>
+			<string>PSListItemsController</string>
+			<key>key</key>
+			<string>activeSkin</string>
+			<key>label</key>
+			<string>Active Skin</string>
+			<key>shortTitles</key>
+			<array>
+				<string>Stock</string>
+				<string>iOS 1-6</string>
+				<string>iOS 7</string>
+				<string>Liquid Glass</string>
+			</array>
 			<key>validTitles</key>
 			<array>
 				<string>Stock (no skin)</string>
@@ -37,33 +58,68 @@
 				<string>ios7</string>
 				<string>glass27</string>
 			</array>
-			<key>shortTitles</key>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSLinkListCell</string>
+			<key>default</key>
+			<string>real</string>
+			<key>defaults</key>
+			<string>com.kolby.sk1n</string>
+			<key>detail</key>
+			<string>PSListItemsController</string>
+			<key>footerText</key>
+			<string>Real Apps renders each app's own icon re-chromed for the era - covers every app. Mix uses the skin's built-in artwork where it has some. Art uses that artwork everywhere.</string>
+			<key>key</key>
+			<string>iconFlavor</string>
+			<key>label</key>
+			<string>Icon Source</string>
+			<key>validTitles</key>
 			<array>
-				<string>Stock</string>
-				<string>iOS 1-6</string>
-				<string>iOS 7</string>
-				<string>Liquid Glass</string>
+				<string>Real Apps (+ era chrome)</string>
+				<string>Mix (skin art + real)</string>
+				<string>Skin Art Only</string>
+			</array>
+			<key>validValues</key>
+			<array>
+				<string>real</string>
+				<string>mix</string>
+				<string>art</string>
 			</array>
 		</dict>
 		<dict>
-			<key>cell</key><string>PSGroupCell</string>
-			<key>label</key><string>Slide to Unlock</string>
-			<key>footerText</key><string>EXPERIMENTAL and independent of the skin. Adds a slide-to-unlock bar to the lock screen and hides the "swipe up" hint. The unlock route could not be verified off-device; if it fails the slider snaps back. Off by default. "Disable swipe-up gesture" is riskier still: leave it off unless you have confirmed the slider unlocks your device (a Face ID device could otherwise be stuck on the lock screen; the kill switch file is the way out).</string>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>footerText</key>
+			<string>EXPERIMENTAL and independent of the skin. Adds a slide-to-unlock bar to the lock screen and hides the "swipe up" hint. The unlock route could not be verified off-device; if it fails the slider snaps back. Off by default. "Disable swipe-up gesture" is riskier still: leave it off unless you have confirmed the slider unlocks your device (a Face ID device could otherwise be stuck on the lock screen; the kill switch file is the way out).</string>
+			<key>label</key>
+			<string>Slide to Unlock</string>
 		</dict>
 		<dict>
-			<key>cell</key><string>PSSwitchCell</string>
-			<key>default</key><false/>
-			<key>defaults</key><string>com.kolby.sk1n</string>
-			<key>key</key><string>slideToUnlock</string>
-			<key>label</key><string>Slide to Unlock</string>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<false/>
+			<key>defaults</key>
+			<string>com.kolby.sk1n</string>
+			<key>key</key>
+			<string>slideToUnlock</string>
+			<key>label</key>
+			<string>Slide to Unlock</string>
 		</dict>
 		<dict>
-			<key>cell</key><string>PSLinkListCell</string>
-			<key>default</key><string>auto</string>
-			<key>defaults</key><string>com.kolby.sk1n</string>
-			<key>key</key><string>sliderStyle</string>
-			<key>label</key><string>Slider Style</string>
-			<key>detail</key><string>PSListItemsController</string>
+			<key>cell</key>
+			<string>PSLinkListCell</string>
+			<key>default</key>
+			<string>auto</string>
+			<key>defaults</key>
+			<string>com.kolby.sk1n</string>
+			<key>detail</key>
+			<string>PSListItemsController</string>
+			<key>key</key>
+			<string>sliderStyle</string>
+			<key>label</key>
+			<string>Slider Style</string>
 			<key>validTitles</key>
 			<array>
 				<string>Match active skin</string>
@@ -80,25 +136,38 @@
 			</array>
 		</dict>
 		<dict>
-			<key>cell</key><string>PSSwitchCell</string>
-			<key>default</key><false/>
-			<key>defaults</key><string>com.kolby.sk1n</string>
-			<key>key</key><string>slideToUnlockBlockSwipe</string>
-			<key>label</key><string>Disable swipe-up gesture (risky)</string>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<false/>
+			<key>defaults</key>
+			<string>com.kolby.sk1n</string>
+			<key>key</key>
+			<string>slideToUnlockBlockSwipe</string>
+			<key>label</key>
+			<string>Disable swipe-up gesture (risky)</string>
 		</dict>
 		<dict>
-			<key>cell</key><string>PSGroupCell</string>
+			<key>cell</key>
+			<string>PSGroupCell</string>
 		</dict>
 		<dict>
-			<key>cell</key><string>PSButtonCell</string>
-			<key>action</key><string>applyAndRespring</string>
-			<key>label</key><string>Apply &amp; Respring</string>
+			<key>action</key>
+			<string>applyAndRespring</string>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>label</key>
+			<string>Apply &amp; Respring</string>
 		</dict>
 		<dict>
-			<key>cell</key><string>PSButtonCell</string>
-			<key>action</key><string>revertToStock</string>
-			<key>label</key><string>Revert to Stock &amp; Respring</string>
-			<key>isDestructive</key><true/>
+			<key>action</key>
+			<string>revertToStock</string>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>isDestructive</key>
+			<true/>
+			<key>label</key>
+			<string>Revert to Stock &amp; Respring</string>
 		</dict>
 	</array>
 	<key>title</key>

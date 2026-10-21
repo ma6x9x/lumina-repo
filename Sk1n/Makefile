@@ -16,6 +16,7 @@ TWEAK_NAME = Sk1n
 # ../ in _FILES makes Theos write objects outside .theos/obj.
 Sk1n_FILES = \
 	src/spkit/SPKRuntime.m \
+	src/spkit/SPKIconArtwork.m \
 	src/Sk1nTweak.m \
 	src/Sk1nHook.m \
 	src/Sk1nPrefs.m \

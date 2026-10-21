@@ -1,32 +1,221 @@
 #import "Sk1nIconEngine.h"
 #import "Sk1nHook.h"
+#import "Sk1nPrefs.h"
+#import "Sk1nSkin.h"
+#import "SPKIconArtwork.h"
 #import "SPKRuntime.h"
 #import <objc/message.h>
+
+// Icon order per install, driven by the "Icon Flavor" pref:
+//
+//   real (default)  UIKit's own render of the app's real icon, re-chromed
+//                   for the skin's era (gloss / flat / liquid glass). Every
+//                   app on the device is covered and each icon always reads
+//                   as the app it opens.
+//   mix             the skin's authored Icons/<bundle id>.png where present,
+//                   real+chrome for everything else.
+//   art             authored PNGs only (the 0.0 skin-flavor behaviour).
+//
+// The bundled `<skin>/Icons` set is therefore the optional "art" flavour,
+// never the default: a skin does not have to ship any artwork to look right.
 
 static Sk1nSkin *gSkin;
 static NSCache<NSString *, UIImage *> *gCache;
 
+#pragma mark - Authored skin artwork
+
+static NSString *Sk1nSafeBundleID(NSString *bundleID) {
+    if (bundleID.length == 0) return nil;
+    if ([bundleID containsString:@"/"] || [bundleID containsString:@".."]) return nil;
+    return bundleID;
+}
+
+/// `<skin>/Icons/<bundleID>[@3x|@2x|].png`, matching the screen scale.
+static UIImage *Sk1nAuthoredIcon(Sk1nSkin *skin, NSString *bundleID) {
+    bundleID = Sk1nSafeBundleID(bundleID);
+    if (!skin || !bundleID) return nil;
+    NSString *base = [skin.iconsDirectory stringByAppendingPathComponent:bundleID];
+    NSFileManager *fm = NSFileManager.defaultManager;
+    CGFloat scale = UIScreen.mainScreen.scale;
+    NSArray *cands =
+        scale >= 3 ? @[@"@3x.png", @"@2x.png", @".png"] :
+        scale >= 2 ? @[@"@2x.png", @".png"] :
+        @[@".png"];
+    for (NSString *suffix in cands) {
+        NSString *path = [base stringByAppendingString:suffix];
+        if (![fm fileExistsAtPath:path]) continue;
+        UIImage *raw = [UIImage imageWithContentsOfFile:path];
+        if (!raw || raw.size.width < 1) return nil;
+        // Plain "<id>.png" is authored at 180px (@3x); declare the true scale
+        // so the image does not render 3x too large.
+        CGFloat s = [path hasSuffix:@"@3x.png"] ? 3 : [path hasSuffix:@"@2x.png"] ? 2 : 3;
+        return raw.CGImage
+            ? [UIImage imageWithCGImage:raw.CGImage scale:s orientation:UIImageOrientationUp]
+            : raw;
+    }
+    return nil;
+}
+
+#pragma mark - Era chrome
+
+/// A home-screen icon mask (22.4% corner radius, the iOS 13+ proportion)
+/// inset by `inset` device pixels. Caller owns the path (release when done).
+static CGPathRef Sk1nSquirclePath(CGSize size, CGFloat inset) {
+    CGRect rect = CGRectInset(CGRectMake(0, 0, size.width, size.height), inset, inset);
+    CGFloat r = rect.size.width * 0.224;
+    return CGPathCreateWithRoundedRect(rect, r, r, NULL);
+}
+
+/// Renders at the icon's device-pixel size in a scale-1 bitmap (so the
+/// fetched icon's scale is not applied twice), then tags the result back
+/// with the icon's scale. Returns `base` unchanged if the render fails.
+static UIImage *Sk1nRenderChrome(UIImage *base, void (^draw)(CGRect px, CGContextRef cg))
+{
+    CGSize pxSize = CGSizeMake(base.size.width * base.scale, base.size.height * base.scale);
+    UIGraphicsImageRendererFormat *fmt = [UIGraphicsImageRendererFormat defaultFormat];
+    fmt.scale = 1;
+    fmt.opaque = NO;
+    UIGraphicsImageRenderer *r =
+        [[UIGraphicsImageRenderer alloc] initWithSize:pxSize format:fmt];
+    UIImage *out = [r imageWithActions:^(UIGraphicsImageRendererContext *ctx) {
+        CGContextRef cg = ctx.CGContext;
+        CGContextSetInterpolationQuality(cg, kCGInterpolationHigh);
+        draw(CGRectMake(0, 0, pxSize.width, pxSize.height), cg);
+    }];
+    if (!out || out.size.width < 1) return base;
+    return out.CGImage
+        ? [UIImage imageWithCGImage:out.CGImage scale:base.scale orientation:UIImageOrientationUp]
+        : base;
+}
+
+/// iOS 1-6 chrome over the real artwork: the base is clipped to the era's
+/// squircle, a white sheen falls across the top half, and a hairline
+/// highlight runs the inner edge — a lit glass tile, no shipped artwork.
+static UIImage *Sk1nChromeIOS1(UIImage *base) {
+    return Sk1nRenderChrome(base, ^(CGRect px, CGContextRef cg) {
+        CGPathRef clip = Sk1nSquirclePath(px.size, 0);
+        CGContextAddPath(cg, clip);
+        CGPathRelease(clip);
+        CGContextClip(cg);
+        [base drawInRect:px];
+
+        // Sheen: white gradient, strongest at the crown, gone by 58%.
+        CGContextSaveGState(cg);
+        CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
+        CGFloat comps[] = { 1.0, 1.0, 1.0, 0.40,  1.0, 1.0, 1.0, 0.22,  1.0, 1.0, 1.0, 0.0 };
+        CGFloat locs[]  = { 0.0, 0.35, 0.58 };
+        CGGradientRef g = CGGradientCreateWithColorComponents(cs, comps, locs, 3);
+        if (g) {
+            CGContextDrawLinearGradient(cg, g,
+                CGPointMake(CGRectGetMidX(px), 0),
+                CGPointMake(CGRectGetMidX(px), CGRectGetMinY(px) + 0.58 * px.size.height), 0);
+            CGGradientRelease(g);
+        }
+        CGColorSpaceRelease(cs);
+        CGContextRestoreGState(cg);
+
+        // Hairline highlight along the inner edge, the way the old tiles had.
+        CGContextSaveGState(cg);
+        CGPathRef inner = Sk1nSquirclePath(px.size, 2);
+        CGContextAddPath(cg, inner);
+        CGPathRelease(inner);
+        CGContextSetStrokeColorWithColor(cg, [UIColor colorWithWhite:1 alpha:0.30].CGColor);
+        CGContextSetLineWidth(cg, 2.0);
+        CGContextStrokePath(cg);
+        CGContextRestoreGState(cg);
+    });
+}
+
+/// iOS 7 chrome: none. iOS 7 was flat and the real artwork already is.
+static UIImage *Sk1nChromeIOS7(UIImage *base) {
+    return base;
+}
+
+/// glass27 chrome: the artwork seen through a liquid-glass tile — a
+/// translucent pane, a specular streak along the crown, and a slight
+/// darkening at the base for depth. The artwork stays recognisable under
+/// it, which is the point of the era.
+static UIImage *Sk1nChromeGlass27(UIImage *base) {
+    return Sk1nRenderChrome(base, ^(CGRect px, CGContextRef cg) {
+        CGPathRef clip = Sk1nSquirclePath(px.size, 0);
+        CGContextAddPath(cg, clip);
+        CGPathRelease(clip);
+        CGContextClip(cg);
+        [base drawInRect:px];
+
+        // Slight darkening so the pane reads as a separate body of glass.
+        CGContextSetFillColorWithColor(cg, [UIColor colorWithWhite:0 alpha:0.10].CGColor);
+        CGContextFillRect(cg, px);
+
+        // Pane: soft white lift, stronger at the top.
+        CGContextSaveGState(cg);
+        CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
+        CGFloat comps[] = { 1.0, 1.0, 1.0, 0.26,  1.0, 1.0, 1.0, 0.10,  1.0, 1.0, 1.0, 0.04 };
+        CGFloat locs[]  = { 0.0, 0.45, 1.0 };
+        CGGradientRef g = CGGradientCreateWithColorComponents(cs, comps, locs, 3);
+        if (g) {
+            CGContextDrawLinearGradient(cg, g,
+                CGPointMake(CGRectGetMidX(px), CGRectGetMinY(px)),
+                CGPointMake(CGRectGetMidX(px), CGRectGetMaxY(px)), 0);
+            CGGradientRelease(g);
+        }
+        CGColorSpaceRelease(cs);
+        CGContextRestoreGState(cg);
+
+        // Specular streak: a bright ellipse bleeding in from the crown.
+        CGContextSaveGState(cg);
+        CGContextSetFillColorWithColor(cg, [UIColor colorWithWhite:1 alpha:0.34].CGColor);
+        CGContextAddEllipseInRect(cg,
+            CGRectMake(px.origin.x - px.size.width * 0.12, px.origin.y - px.size.height * 0.45,
+                       px.size.width * 0.85, px.size.height * 0.55));
+        CGContextFillPath(cg);
+        CGContextRestoreGState(cg);
+    });
+}
+
+static UIImage *Sk1nChromedIcon(UIImage *base, Sk1nEra era) {
+    if (!base) return nil;
+    @try {
+        switch (era) {
+            case Sk1nEraIOS1:    return Sk1nChromeIOS1(base);
+            case Sk1nEraIOS7:    return base;
+            case Sk1nEraGlass27: return Sk1nChromeGlass27(base);
+        }
+    } @catch (__unused id ex) {}
+    return base;
+}
+
+#pragma mark - Runtime artwork for a bundle id
+
+static UIImage *Sk1nRuntimeIcon(Sk1nSkin *skin, NSString *bundleID) {
+    UIImage *real = SPKRealIconForBundleID(bundleID);
+    UIImage *chromed = Sk1nChromedIcon(real, skin.era);
+    if (chromed) return chromed;
+    // No real artwork (sideloaded stubs, hidden bundles) — fall back to a
+    // themer theme's IconBundles or the skin's own authored set.
+    UIImage *themed = SPKThemeIconForBundleID(bundleID);
+    if (themed) return Sk1nChromedIcon(themed, skin.era);
+    return Sk1nAuthoredIcon(skin, bundleID);
+}
+
 UIImage *Sk1nIconForBundleID(Sk1nSkin *skin, NSString *bundleID) {
-    if (!skin || bundleID.length == 0 || [bundleID containsString:@"/"] || [bundleID containsString:@".."]) return nil;
+    bundleID = Sk1nSafeBundleID(bundleID);
+    if (!skin || !bundleID) return nil;
     if (!gCache) gCache = [[NSCache alloc] init];
-    NSString *key = [skin.skinID stringByAppendingFormat:@"|%@", bundleID];
+    NSString *flavor = Sk1nPrefIconFlavor();
+    NSString *key = [skin.skinID stringByAppendingFormat:@"|%@|%@", bundleID, flavor];
     UIImage *hit = [gCache objectForKey:key];
     if (hit) return hit;
-    NSString *base = [skin.iconsDirectory stringByAppendingPathComponent:bundleID];
-    NSString *path = nil;
-    CGFloat scale = UIScreen.mainScreen.scale;
-    NSArray *cands = scale >= 3 ? @[@"@3x.png", @"@2x.png", @".png"] : @[@"@2x.png", @".png"];
-    for (NSString *suffix in cands) {
-        NSString *p = [base stringByAppendingString:suffix];
-        if ([NSFileManager.defaultManager fileExistsAtPath:p]) { path = p; break; }
+
+    UIImage *img = nil;
+    if ([flavor isEqualToString:@"art"]) {
+        img = Sk1nAuthoredIcon(skin, bundleID);
+    } else if ([flavor isEqualToString:@"mix"]) {
+        img = Sk1nAuthoredIcon(skin, bundleID) ?: Sk1nRuntimeIcon(skin, bundleID);
+    } else { // "real", the default
+        img = Sk1nRuntimeIcon(skin, bundleID);
     }
-    if (!path) return nil;
-    UIImage *raw = [UIImage imageWithContentsOfFile:path];
-    if (!raw || raw.size.width < 1) return nil;
-    // Plain "<id>.png" is authored at 180px (@3x); declare the true scale so the
-    // image does not render 3x too large.
-    CGFloat s = [path hasSuffix:@"@3x.png"] ? 3 : [path hasSuffix:@"@2x.png"] ? 2 : 3;
-    UIImage *img = raw.CGImage ? [UIImage imageWithCGImage:raw.CGImage scale:s orientation:UIImageOrientationUp] : raw;
+    if (!img) return nil;
     [gCache setObject:img forKey:key];
     return img;
 }
@@ -75,4 +264,9 @@ NSUInteger Sk1nIconEngineInstall(Sk1nSkin *skin) {
         if (orig) n++;
     }
     return n;
+}
+
+void Sk1nIconEngineUnload(void) {
+    gSkin = nil;
+    gCache = nil;
 }
