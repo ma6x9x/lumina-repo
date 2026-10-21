@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 """Generate ORIGINAL placeholder era-styled icons for stock bundle IDs.
 
-Every pixel is drawn here with PIL primitives (rounded rectangles, gradients,
-simple geometric glyphs). NO Apple artwork is used, copied, traced or
-redistributed. The glyphs are deliberately abstract stand-ins; skin authors are
-expected to replace them with their own art.
+Every pixel is drawn here with PIL primitives (rounded rectangles, rotated
+shapes, simple geometric glyphs). NO Apple artwork is used, copied, traced or
+redistributed. The glyphs are original drawings that read as the app they
+stand for (handset, compass pointer, guitar body, ...); skin authors who want
+true-to-Apple eras should supply their own art or use the "real" icon flavour
+at runtime instead.
 
     pip install pillow
     python3 tools/sk1n-icons.py            # writes all three skins
     python3 tools/sk1n-icons.py ios7       # one skin
 """
+import math
 import sys
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFilter
@@ -62,86 +65,153 @@ def rmask(w, h, r):
     ImageDraw.Draw(m).rounded_rectangle((0, 0, w - 1, h - 1), r, fill=255)
     return m
 
+def rot_rect(d, cx, cy, w, h, angle, col):
+    """A filled rectangle rotated about (cx, cy) — for hands, teeth, handsets."""
+    ca, sa = math.cos(angle), math.sin(angle)
+    pts = []
+    for x, y in ((-w/2, -h/2), (w/2, -h/2), (w/2, h/2), (-w/2, h/2)):
+        pts.append((cx + x*ca - y*sa, cy + x*sa + y*ca))
+    d.polygon(pts, fill=col)
+
 def glyph(d, kind, cx, cy, s, col, w):
-    """Abstract, original geometric glyphs on a (cx,cy) centre, scale s."""
-    L = max(2, int(s * 0.09))
-    if kind in ("phone",):
-        d.arc((cx - s*.35, cy - s*.35, cx + s*.35, cy + s*.35), 200, 340, fill=col, width=int(L*2.2))
-    elif kind in ("bubble",):
-        d.ellipse((cx - s*.42, cy - s*.34, cx + s*.42, cy + s*.30), fill=col)
-        d.polygon([(cx - s*.25, cy + s*.2), (cx - s*.40, cy + s*.42), (cx - s*.05, cy + s*.27)], fill=col)
-    elif kind in ("envelope",):
-        d.rounded_rectangle((cx - s*.42, cy - s*.28, cx + s*.42, cy + s*.28), int(s*.06), outline=col, width=L)
-        d.line([(cx - s*.42, cy - s*.26), (cx, cy + s*.06), (cx + s*.42, cy - s*.26)], fill=col, width=L)
-    elif kind in ("compass",):
-        d.ellipse((cx - s*.42, cy - s*.42, cx + s*.42, cy + s*.42), outline=col, width=L)
-        d.polygon([(cx + s*.22, cy - s*.22), (cx + s*.05, cy + s*.05), (cx - s*.22, cy + s*.22), (cx - s*.05, cy - s*.05)], fill=col)
-    elif kind in ("note",):
-        d.ellipse((cx - s*.30, cy + s*.10, cx - s*.06, cy + s*.34), fill=col)
-        d.rectangle((cx - s*.09, cy - s*.34, cx - s*.04, cy + s*.22), fill=col)
-        d.polygon([(cx - s*.05, cy - s*.34), (cx + s*.30, cy - s*.22), (cx + s*.30, cy - s*.10), (cx - s*.05, cy - s*.20)], fill=col)
-    elif kind in ("camera",):
-        d.rounded_rectangle((cx - s*.42, cy - s*.24, cx + s*.42, cy + s*.30), int(s*.08), outline=col, width=L)
-        d.ellipse((cx - s*.17, cy - s*.12, cx + s*.17, cy + s*.22), outline=col, width=L)
-    elif kind in ("flower",):
-        for i in range(8):
-            import math
-            a = i * math.pi / 4
-            x, y = cx + math.cos(a) * s*.22, cy + math.sin(a) * s*.22
-            d.ellipse((x - s*.14, y - s*.14, x + s*.14, y + s*.14), fill=col)
-    elif kind in ("gear",):
-        import math
-        for i in range(8):
-            a = i * math.pi / 4
-            x, y = cx + math.cos(a) * s*.36, cy + math.sin(a) * s*.36
-            d.ellipse((x - s*.08, y - s*.08, x + s*.08, y + s*.08), fill=col)
-        d.ellipse((cx - s*.30, cy - s*.30, cx + s*.30, cy + s*.30), outline=col, width=int(L*2))
-    elif kind in ("grid",):
-        for i in (-1, 0, 1):
-            for j in (-1, 0, 1):
-                d.rectangle((cx + i*s*.28 - s*.08, cy + j*s*.28 - s*.08, cx + i*s*.28 + s*.08, cy + j*s*.28 + s*.08), fill=col)
-    elif kind in ("clock",):
-        d.ellipse((cx - s*.42, cy - s*.42, cx + s*.42, cy + s*.42), outline=col, width=L)
-        d.line([(cx, cy), (cx, cy - s*.28)], fill=col, width=L)
-        d.line([(cx, cy), (cx + s*.20, cy + s*.08)], fill=col, width=L)
-    elif kind in ("pin",):
-        d.ellipse((cx - s*.26, cy - s*.40, cx + s*.26, cy + s*.12), fill=col)
-        d.polygon([(cx - s*.20, cy), (cx + s*.20, cy), (cx, cy + s*.42)], fill=col)
-    elif kind in ("sun",):
-        import math
-        d.ellipse((cx - s*.20, cy - s*.20, cx + s*.20, cy + s*.20), fill=col)
+    """Recognisable, ORIGINAL glyphs for each app, drawn with PIL primitives."""
+    L = max(2, int(s * 0.07))
+    if kind in ("phone",):          # handset: two earpads joined by a thick bar
+        for sx in (-1, 1):
+            d.ellipse((cx + sx*s*.28 - s*.17, cy + sx*s*.28 - s*.17,
+                       cx + sx*s*.28 + s*.17, cy + sx*s*.28 + s*.17), fill=col)
+        rot_rect(d, cx, cy, s * 0.62, s * 0.17, math.radians(45), col)
+    elif kind in ("bubble",):       # speech bubble: pill + tail
+        d.rounded_rectangle((cx - s*.42, cy - s*.34, cx + s*.42, cy + s*.22),
+                            int(s*.20), fill=col)
+        d.polygon([(cx - s*.20, cy + s*.14), (cx + s*.04, cy + s*.14),
+                   (cx - s*.16, cy + s*.42)], fill=col)
+    elif kind in ("envelope",):     # envelope: sheet + flap V
+        d.rounded_rectangle((cx - s*.42, cy - s*.28, cx + s*.42, cy + s*.28),
+                            int(s*.07), fill=col)
+        for t in (-0.26, 0.04):
+            pass
+        d.line([(cx - s*.40, cy - s*.24), (cx, cy + s*.06), (cx + s*.40, cy - s*.24)],
+               fill=(58, 58, 62, 255), width=L)
+    elif kind in ("compass",):      # compass rose: ring, needle, hub
+        d.ellipse((cx - s*.40, cy - s*.40, cx + s*.40, cy + s*.40), outline=col, width=int(L*1.5))
+        d.polygon([(cx + s*.28, cy - s*.28), (cx - s*.03, cy - s*.05), (cx + s*.05, cy + s*.03)], fill=col)
+        d.polygon([(cx - s*.28, cy + s*.28), (cx + s*.03, cy + s*.05), (cx - s*.05, cy - s*.03)],
+                  fill=tuple(max(0, int(c * 0.55)) for c in col))
+        d.ellipse((cx - s*.04, cy - s*.04, cx + s*.04, cy + s*.04), fill=col)
+    elif kind in ("note",):         # two beamed eighth notes
+        d.ellipse((cx - s*.32, cy + s*.12, cx - s*.08, cy + s*.36), fill=col)
+        d.ellipse((cx + s*.08, cy + s*.04, cx + s*.32, cy + s*.28), fill=col)
+        d.rectangle((cx - s*.13, cy - s*.34, cx - s*.09, cy + s*.26), fill=col)
+        d.rectangle((cx + s*.27, cy - s*.42, cx + s*.31, cy + s*.18), fill=col)
+        d.polygon([(cx - s*.13, cy - s*.34), (cx + s*.31, cy - s*.42),
+                   (cx + s*.31, cy - s*.24), (cx - s*.13, cy - s*.16)], fill=col)
+    elif kind in ("camera",):       # camera body, shutter bump, lens
+        d.rounded_rectangle((cx - s*.44, cy - s*.26, cx + s*.44, cy + s*.30),
+                            int(s*.09), fill=col)
+        d.rounded_rectangle((cx - s*.14, cy - s*.38, cx + s*.06, cy - s*.20),
+                            int(s*.05), fill=col)
+        d.ellipse((cx - s*.17, cy - s*.11, cx + s*.17, cy + s*.25),
+                  outline=(40, 40, 44, 255), width=int(L*1.5))
+    elif kind in ("flower",):       # 8 petals around a center
         for i in range(8):
             a = i * math.pi / 4
-            d.line([(cx + math.cos(a)*s*.30, cy + math.sin(a)*s*.30), (cx + math.cos(a)*s*.44, cy + math.sin(a)*s*.44)], fill=col, width=L)
-    elif kind in ("lines",):
+            x, y = cx + math.cos(a) * s*.24, cy + math.sin(a) * s*.24
+            d.ellipse((x - s*.15, y - s*.15, x + s*.15, y + s*.15), fill=col)
+        d.ellipse((cx - s*.09, cy - s*.09, cx + s*.09, cy + s*.09), fill=col)
+    elif kind in ("gear",):         # gear: teeth + ring + hub
+        for i in range(8):
+            a = i * math.pi / 4
+            x, y = cx + math.cos(a) * s*.40, cy + math.sin(a) * s*.40
+            rot_rect(d, x, y, s*.24, s*.20, a, col)
+        d.ellipse((cx - s*.32, cy - s*.32, cx + s*.32, cy + s*.32), outline=col, width=int(s*.09))
+        d.ellipse((cx - s*.14, cy - s*.14, cx + s*.14, cy + s*.14), fill=col)
+    elif kind in ("grid",):         # calendar sheet: header + date dots
+        d.rounded_rectangle((cx - s*.38, cy - s*.42, cx + s*.38, cy + s*.42),
+                            int(s*.08), fill=col)
+        d.line([(cx - s*.38, cy - s*.20), (cx + s*.38, cy - s*.20)],
+               fill=(58, 58, 62, 255), width=L)
+        for j, r in enumerate((-1, 0, 1)):
+            for i in (-2, -1, 0, 1):
+                y0 = cy + r*s*.12 + (s*.04 if j == -1 else 0)
+                d.ellipse((cx + i*s*.13 - s*.04, y0 - s*.04,
+                           cx + i*s*.13 + s*.04, y0 + s*.04), fill=(58, 58, 62, 255))
+    elif kind in ("clock",):        # clock face: ring, minute hand, hour hand
+        d.ellipse((cx - s*.42, cy - s*.42, cx + s*.42, cy + s*.42),
+                  outline=col, width=int(L*2))
+        d.line([(cx, cy), (cx, cy - s*.28)], fill=col, width=int(L*1.8))
+        d.line([(cx, cy), (cx + s*.22, cy + s*.06)], fill=col, width=int(L*1.8))
+    elif kind in ("pin",):          # map pin
+        d.ellipse((cx - s*.30, cy - s*.44, cx + s*.30, cy + s*.16), fill=col)
+        d.polygon([(cx - s*.22, cy - s*.02), (cx + s*.22, cy - s*.02),
+                   (cx, cy + s*.44)], fill=col)
+    elif kind in ("sun",):          # sun with rays
+        d.ellipse((cx - s*.22, cy - s*.22, cx + s*.22, cy + s*.22), fill=col)
+        for i in range(12):
+            a = i * math.pi / 6
+            x0, y0 = cx + math.cos(a)*s*.32, cy + math.sin(a)*s*.32
+            x1, y1 = cx + math.cos(a)*s*.42, cy + math.sin(a)*s*.42
+            d.line([(x0, y0), (x1, y1)], fill=col, width=L)
+    elif kind in ("lines",):        # note paper: three ruled lines
         for k in (-1, 0, 1):
-            d.line([(cx - s*.36, cy + k*s*.24), (cx + s*.36, cy + k*s*.24)], fill=col, width=L)
-    elif kind in ("check",):
-        d.line([(cx - s*.30, cy), (cx - s*.08, cy + s*.24), (cx + s*.32, cy - s*.26)], fill=col, width=int(L*1.6))
-    elif kind in ("plusminus",):
-        d.line([(cx - s*.30, cy - s*.18), (cx + s*.30, cy - s*.18)], fill=col, width=L)
-        d.line([(cx, cy - s*.40), (cx, cy + s*.04)], fill=col, width=L)
-        d.line([(cx - s*.30, cy + s*.30), (cx + s*.30, cy + s*.30)], fill=col, width=L)
-    elif kind in ("heart",):
-        d.ellipse((cx - s*.38, cy - s*.34, cx + .0, cy + s*.06), fill=col)
-        d.ellipse((cx, cy - s*.34, cx + s*.38, cy + s*.06), fill=col)
-        d.polygon([(cx - s*.36, cy - s*.04), (cx + s*.36, cy - s*.04), (cx, cy + s*.40)], fill=col)
-    elif kind in ("card",):
-        d.rounded_rectangle((cx - s*.42, cy - s*.28, cx + s*.42, cy + s*.28), int(s*.06), outline=col, width=L)
-        d.line([(cx - s*.42, cy - s*.08), (cx + s*.42, cy - s*.08)], fill=col, width=L)
-    elif kind in ("chart",):
-        d.line([(cx - s*.4, cy + s*.2), (cx - s*.1, cy - s*.05), (cx + s*.1, cy + s*.1), (cx + s*.4, cy - s*.3)], fill=col, width=L)
-    elif kind in ("video",):
-        d.rounded_rectangle((cx - s*.42, cy - s*.22, cx + s*.12, cy + s*.22), int(s*.06), fill=col)
-        d.polygon([(cx + s*.18, cy), (cx + s*.42, cy - s*.18), (cx + s*.42, cy + s*.18)], fill=col)
-    elif kind in ("wave",):
-        for i, hh in enumerate((.1, .25, .4, .25, .1, .3, .15)):
+            d.rounded_rectangle((cx - s*.36, cy + k*s*.24 - L/2, cx + s*.36, cy + k*s*.24 + L/2),
+                                L//2, fill=col)
+    elif kind in ("check",):        # checklist
+        d.line([(cx - s*.30, cy + s*.02), (cx - s*.08, cy + s*.26), (cx + s*.32, cy - s*.26)],
+               fill=col, width=int(L*1.8))
+    elif kind in ("plusminus",):    # calculator keys: 2x2 button grid
+        for i in (-1, 1):
+            for j in (-1, 1):
+                d.rounded_rectangle((cx + i*s*.24 - s*.16, cy + j*s*.24 - s*.16,
+                                     cx + i*s*.24 + s*.16, cy + j*s*.24 + s*.16),
+                                    int(s*.05), fill=col)
+    elif kind in ("a",):            # stylised "A" for the App Store
+        d.line([(cx - s*.30, cy + s*.32), (cx, cy - s*.32),
+                (cx + s*.30, cy + s*.32)], fill=col, width=int(L*1.8))
+        d.line([(cx - s*.18, cy + s*.04), (cx + s*.18, cy + s*.04)], fill=col, width=int(L*1.4))
+    elif kind in ("heart",):        # heart: two lobes + wedge point
+        d.ellipse((cx - s*.40, cy - s*.36, cx + s*.02, cy + s*.06), fill=col)
+        d.ellipse((cx - s*.02, cy - s*.36, cx + s*.40, cy + s*.06), fill=col)
+        d.polygon([(cx - s*.34, cy - s*.10), (cx + s*.34, cy - s*.10),
+                   (cx, cy + s*.40)], fill=col)
+    elif kind in ("card",):         # wallet: stacked cards
+        d.rounded_rectangle((cx - s*.34, cy - s*.36, cx + s*.34, cy - s*.08),
+                            int(s*.06), fill=col)
+        d.rounded_rectangle((cx - s*.42, cy - s*.18, cx + s*.42, cy + s*.10),
+                            int(s*.06), fill=col)
+        d.rounded_rectangle((cx - s*.34, cy + s*.00, cx + s*.34, cy + s*.36),
+                            int(s*.06), outline=col, width=L)
+    elif kind in ("chart",):        # line chart
+        d.line([(cx - s*.40, cy + s*.22), (cx - s*.10, cy - s*.04),
+                (cx + s*.10, cy + s*.10), (cx + s*.40, cy - s*.30)],
+               fill=col, width=L)
+    elif kind in ("video",):        # camera: body + prism
+        d.rounded_rectangle((cx - s*.42, cy - s*.22, cx + s*.12, cy + s*.22),
+                            int(s*.06), fill=col)
+        d.polygon([(cx + s*.18, cy), (cx + s*.42, cy - s*.18),
+                   (cx + s*.42, cy + s*.18)], fill=col)
+    elif kind in ("n",):            # "N": two stems + diagonal
+        d.line([(cx - s*.28, cy + s*.34), (cx - s*.28, cy - s*.34)], fill=col, width=int(L*1.5))
+        d.line([(cx + s*.28, cy + s*.34), (cx + s*.28, cy - s*.34)], fill=col, width=int(L*1.5))
+        d.line([(cx - s*.28, cy - s*.34), (cx + s*.28, cy + s*.34)], fill=col, width=int(L*1.5))
+    elif kind in ("wave",):         # waveform bars
+        for i, hh in enumerate((.12, .26, .40, .26, .12, .30, .18)):
             x = cx - s*.36 + i*s*.12
-            d.line([(x, cy - s*hh), (x, cy + s*hh)], fill=col, width=L)
-    elif kind in ("house",):
-        d.polygon([(cx - s*.42, cy), (cx, cy - s*.40), (cx + s*.42, cy)], fill=col)
-        d.rectangle((cx - s*.30, cy, cx + s*.30, cy + s*.34), fill=col)
-    else:  # letter glyphs: a, n, guitar -> simple letter-ish marks
+            d.line([(x, cy - s*hh), (x, cy + s*hh)], fill=col, width=int(L*0.9) or 2)
+    elif kind in ("house",):        # home: roof + body + door
+        d.polygon([(cx - s*.42, cy - s*.02), (cx, cy - s*.42), (cx + s*.42, cy - s*.02)], fill=col)
+        d.rectangle((cx - s*.30, cy - s*.04, cx + s*.30, cy + s*.36), fill=col)
+        d.rounded_rectangle((cx - s*.10, cy + s*.08, cx + s*.10, cy + s*.36),
+                            s*.04, fill=tuple(max(0, int(c * 0.35)) for c in col))
+    elif kind in ("guitar",):       # guitar: body under the neck, neck through it
+        rot_rect(d, cx + s*.12, cy - s*.12, s*.78, s*.11, math.radians(-45), col)
+        d.ellipse((cx - s*.32, cy - s*.06, cx + s*.16, cy + s*.42), fill=col)
+        d.ellipse((cx - s*.20, cy + s*.04, cx + s*.28, cy + s*.46), fill=col)
+        d.ellipse((cx - s*.08, cy + s*.08, cx + s*.08, cy + s*.24), fill=(58, 58, 62, 255))
+        d.ellipse((cx - s*.13, cy + s*.03, cx + s*.13, cy + s*.29), outline=(58, 58, 62, 255), width=L)
+    elif kind in ("guitar_fallback",):
+        d.line([(cx - s*.25, cy + s*.3), (cx, cy - s*.3), (cx + s*.25, cy + s*.3)], fill=col, width=int(L*1.6))
+    else:  # letter glyphs: simple letter-ish marks
         d.line([(cx - s*.25, cy + s*.3), (cx, cy - s*.3), (cx + s*.25, cy + s*.3)], fill=col, width=int(L*1.6))
         d.line([(cx - s*.14, cy + s*.08), (cx + s*.14, cy + s*.08)], fill=col, width=L)
 
