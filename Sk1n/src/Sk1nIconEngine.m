@@ -177,7 +177,7 @@ static UIImage *Sk1nChromedIcon(UIImage *base, Sk1nEra era) {
     @try {
         switch (era) {
             case Sk1nEraIOS1:    return Sk1nChromeIOS1(base);
-            case Sk1nEraIOS7:    return base;
+            case Sk1nEraIOS7:    return Sk1nChromeIOS7(base);
             case Sk1nEraGlass27: return Sk1nChromeGlass27(base);
         }
     } @catch (__unused id ex) {}
