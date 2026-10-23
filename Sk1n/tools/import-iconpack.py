@@ -148,6 +148,30 @@ def import_flat_named(folder, out_dir, era, name_map):
         n += 1
     return n
 
+THIRD_PARTY = {
+    # authentic third-party artwork from the iOS 6 era (upstream 3rd-party dir)
+    "Facebook": "com.facebook.Facebook",
+    "Facebook Messenger": "com.facebook.Messenger",
+    "Instagram": "com.burbn.instagram",
+    "Twitter": "com.atebits.Tweetie2",
+    "Netflix iPhone": "com.netflix.Netflix",
+    "Spotify iPhone": "com.spotify.Client",
+    "WhatsApp": "net.whatsapp.WhatsApp",
+    "Snapchat iPhone": "com.toyopagroup.picaboo",
+    "YouTube iPhone": "com.google.ios.youtube",
+    "Discord": "com.hammerandchisel.discord",
+}
+
+MODERN_RECREATIONS = {
+    # redditor-made era-style icons for apps that did not exist in iOS 6
+    # (credited in tools/ICON_CATALOG.md)
+    "Fitness": "com.apple.Fitness",
+    "Freeform": "com.apple.Freeform",
+    "Clips": "com.apple.clips",
+    "Apple Watch": "com.apple.Bridge",
+    "Code Scanner": "com.apple.meshkit",
+}
+
 PACKS = {
     "zagnut531": {
         # https://github.com/zagnut531/iOS-6-Icons - authentic iOS 6 era art,
@@ -156,6 +180,18 @@ PACKS = {
         "era": "ios1",
         "kind": "flat",
         "name_map": APPLE_CROPPED,
+    },
+    "zagnut531-3rd": {
+        "theme_dir": "iOS-6-Icons/3rd-party icons",
+        "era": "ios1",
+        "kind": "flat",
+        "name_map": THIRD_PARTY,
+    },
+    "zagnut531-modern": {
+        "theme_dir": "iOS-6-Icons/Apple icons",
+        "era": "ios1",
+        "kind": "flat",
+        "name_map": MODERN_RECREATIONS,
     },
     "okapi": {
         # https://github.com/JustAnOkapi/Okapi-Icons-Bulk - Unlicense;
@@ -169,7 +205,7 @@ PACKS = {
 def main():
     packs_root = Path("/tmp/sk1n-catalog")  # default catalog checkout location
     args = sys.argv[1:]
-    if len(args) >= 2:                # [packs_root] pack...
+    if args and args[0] not in PACKS:  # [packs_root] pack...
         packs_root = Path(args[0]); args = args[1:]
     args = args or list(PACKS)
     for arg in args:

@@ -59,7 +59,11 @@ def main():
         except Exception as ex:
             errs = [f"unreadable: {ex}"]
         icons = d / "Icons"
-        if not icons.is_dir() or not any(icons.glob("*.png")): errs.append("Icons/ has no PNGs")
+        # An icon catalog is OPTIONAL: a skin may ship no artwork at all
+        # (glass27) and get the device's own real artwork at runtime. When
+        # the directory exists it must actually hold PNGs — an empty Icons/
+        # is more likely a broken import than a statement.
+        if icons.is_dir() and not any(icons.glob("*.png")): errs.append("Icons/ has no PNGs")
         print(("FAIL " if errs else "ok   ") + d.name + ("" if not errs else ": " + "; ".join(errs)))
         bad += bool(errs)
     if n == 0: print("no skins found"); return 1

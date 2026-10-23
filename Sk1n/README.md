@@ -4,9 +4,9 @@ One setting + a respring re-skins SpringBoard in a prepackaged era:
 
 | Skin id | Era | Icon catalog |
 |---------|-----|--------------|
-| `ios1` | iOS 1-6, skeuomorphic: glossy icons, glossy dock shelf | authentic iOS 6 set (zagnut531/iOS-6-Icons, 45 apps) + engine fallback |
+| `ios1` | iOS 1-6, skeuomorphic: glossy icons, glossy dock shelf | authentic iOS 6 set (zagnut531/iOS-6-Icons, 59 apps incl. era third-party + credited era-styled recreations) + engine fallback |
 | `ios7` | iOS 7, flat | Okapi flat pack (JustAnOkapi, Unlicense, 39 apps) + generated flat set |
-| `glass27` | iOS 26/27 Liquid Glass (UIGlassEffect on iOS 26+, material blur below) | the device's real icons, glass-chromed at runtime |
+| `glass27` | iOS 26/27 Liquid Glass (UIGlassEffect on iOS 26+, material blur below) | the device's real icons, untouched — that artwork is this era's own look |
 | `stock` | no skin (default) | untouched |
 
 Bundle id `com.kolby.sk1n`. ObjC-only dylib, SpringBoard filter, rootless (Dopamine) and roothide packages.
@@ -53,7 +53,7 @@ Classes: `Sk1nSkin` (loader + strict validator), `Sk1nSkinStore` (discovery). `t
 Hooks `-[SBIconImageView contentsImage]` and `-displayedImage` and resolves one image per bundle id, automatically (no pref):
 
 1. **Authored skin artwork** - `<skin>/Icons/<bundle id>.png` (180px @3x; also @2x). The skin's own legacy-era icon files; **this always wins** - custom art is only ever consulted when the runtime has a file for the app.
-2. **Real artwork** - `SPKRealIconForBundleID()` (SPKit; `+[UIImage _applicationIconImageForBundleIdentifier:format:scale:]`, format 2, the call device-verified through SwiftPeek's icon inventory), then era chrome drawn over it in CoreGraphics (`Sk1nChromeIOS1` sheen + hairline inside a 22.4% mask; iOS 7 untouched; `Sk1nChromeGlass27` pane + specular). Covers every app the skin does not carry an icon for, with art that is relevant to the app.
+2. **Real artwork** - `SPKRealIconForBundleID()` (SPKit; `+[UIImage _applicationIconImageForBundleIdentifier:format:scale:]`, format 2, the call device-verified through SwiftPeek's icon inventory). Era chrome is drawn over it only for iOS 1-6, and it is subtle (light sheen + faint inner hairline inside a 22.4% mask); **iOS 7 and glass27 get no chrome** — their eras' artwork is flat/modern already, and chrome is what made the live-generated look messy. Covers every app the skin does not carry an icon for.
 3. **Themer artwork** - `SPKThemeIconForBundleID()` (first SnowBoard/Anemone `IconBundles/<bundle id>[@3x|@2x|].png` hit), also chromed. Last resort.
 
 The bundled `<skin>/Icons` sets are era catalogs: era-true packs (see

@@ -9,9 +9,10 @@
 //
 //   1. authored  <skin>/Icons/<bundle id>.png — the skin's own (legacy-era)
 //                artwork, used whenever the skin ships an icon file;
-//   2. real      UIKit's own render of the app's real icon, re-chromed for
-//                the skin's era (SPKRealIconForBundleID) — covers every app
-//                the skin does not carry art for;
+//   2. real      UIKit's own render of the app's real icon (SPKRealIconForBundleID)
+//                — covers every app the skin does not carry art for; iOS 1-6
+//                gets a subtle gloss, iOS 7 and glass27 artwork untouched
+//                (that art is already the era's own look);
 //   3. themed    SnowBoard/Anemone IconBundles artwork as a last resort.
 //
 // Custom artwork is only ever consulted when the runtime has no file for the
@@ -101,8 +102,8 @@ static UIImage *Sk1nChromeIOS1(UIImage *base) {
         // Sheen: white gradient, strongest at the crown, gone by 58%.
         CGContextSaveGState(cg);
         CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
-        CGFloat comps[] = { 1.0, 1.0, 1.0, 0.40,  1.0, 1.0, 1.0, 0.22,  1.0, 1.0, 1.0, 0.0 };
-        CGFloat locs[]  = { 0.0, 0.35, 0.58 };
+        CGFloat comps[] = { 1.0, 1.0, 1.0, 0.22,  1.0, 1.0, 1.0, 0.12,  1.0, 1.0, 1.0, 0.0 };
+        CGFloat locs[]  = { 0.0, 0.30, 0.45 };
         CGGradientRef g = CGGradientCreateWithColorComponents(cs, comps, locs, 3);
         if (g) {
             CGContextDrawLinearGradient(cg, g,
@@ -118,7 +119,7 @@ static UIImage *Sk1nChromeIOS1(UIImage *base) {
         CGPathRef inner = Sk1nSquirclePath(px.size, 2);
         CGContextAddPath(cg, inner);
         CGPathRelease(inner);
-        CGContextSetStrokeColorWithColor(cg, [UIColor colorWithWhite:1 alpha:0.30].CGColor);
+        CGContextSetStrokeColorWithColor(cg, [UIColor colorWithWhite:1 alpha:0.14].CGColor);
         CGContextSetLineWidth(cg, 2.0);
         CGContextStrokePath(cg);
         CGContextRestoreGState(cg);
@@ -130,55 +131,13 @@ static UIImage *Sk1nChromeIOS7(UIImage *base) {
     return base;
 }
 
-/// glass27 chrome: the artwork seen through a liquid-glass tile — a
-/// translucent pane, a specular streak along the crown, and a slight
-/// darkening at the base for depth. The artwork stays recognisable under
-/// it, which is the point of the era.
-static UIImage *Sk1nChromeGlass27(UIImage *base) {
-    return Sk1nRenderChrome(base, ^(CGRect px, CGContextRef cg) {
-        CGPathRef clip = Sk1nSquirclePath(px.size, 0);
-        CGContextAddPath(cg, clip);
-        CGPathRelease(clip);
-        CGContextClip(cg);
-        [base drawInRect:px];
-
-        // Slight darkening so the pane reads as a separate body of glass.
-        CGContextSetFillColorWithColor(cg, [UIColor colorWithWhite:0 alpha:0.10].CGColor);
-        CGContextFillRect(cg, px);
-
-        // Pane: soft white lift, stronger at the top.
-        CGContextSaveGState(cg);
-        CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
-        CGFloat comps[] = { 1.0, 1.0, 1.0, 0.26,  1.0, 1.0, 1.0, 0.10,  1.0, 1.0, 1.0, 0.04 };
-        CGFloat locs[]  = { 0.0, 0.45, 1.0 };
-        CGGradientRef g = CGGradientCreateWithColorComponents(cs, comps, locs, 3);
-        if (g) {
-            CGContextDrawLinearGradient(cg, g,
-                CGPointMake(CGRectGetMidX(px), CGRectGetMinY(px)),
-                CGPointMake(CGRectGetMidX(px), CGRectGetMaxY(px)), 0);
-            CGGradientRelease(g);
-        }
-        CGColorSpaceRelease(cs);
-        CGContextRestoreGState(cg);
-
-        // Specular streak: a bright ellipse bleeding in from the crown.
-        CGContextSaveGState(cg);
-        CGContextSetFillColorWithColor(cg, [UIColor colorWithWhite:1 alpha:0.34].CGColor);
-        CGContextAddEllipseInRect(cg,
-            CGRectMake(px.origin.x - px.size.width * 0.12, px.origin.y - px.size.height * 0.45,
-                       px.size.width * 0.85, px.size.height * 0.55));
-        CGContextFillPath(cg);
-        CGContextRestoreGState(cg);
-    });
-}
-
 static UIImage *Sk1nChromedIcon(UIImage *base, Sk1nEra era) {
     if (!base) return nil;
     @try {
         switch (era) {
             case Sk1nEraIOS1:    return Sk1nChromeIOS1(base);
             case Sk1nEraIOS7:    return Sk1nChromeIOS7(base);
-            case Sk1nEraGlass27: return Sk1nChromeGlass27(base);
+            case Sk1nEraGlass27: return base;  // real artwork is this era's own look - no chrome
         }
     } @catch (__unused id ex) {}
     return base;

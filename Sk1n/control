@@ -1,6 +1,6 @@
 Package: com.kolby.sk1n
 Name: Sk1n
-Version: 0.2.0
+Version: 0.2.1
 Architecture: iphoneos-arm64
 Description: Full iOS re-skin in one tap: pick an era (iOS 1-6 skeuomorphic, iOS 7 flat, iOS 26 Liquid Glass), Apply & Respring.
 Maintainer: Kolby
