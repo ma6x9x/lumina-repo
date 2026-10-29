@@ -4,9 +4,10 @@
 #import "SPKRuntime.h"
 #import "Sk1nPrefs.h"
 #import <objc/message.h>
+#import <objc/runtime.h>
 
 static const NSInteger kSliderTag = 0x5E1D;
-static const NSInteger kSwipeTag  = 0x5E1E;
+static const char *kSwipeKey = "sk1n.rightSwipe";
 static Sk1nEra gStyle;
 static NSDictionary *gConfig;
 static BOOL gInstallClassic;
@@ -83,8 +84,9 @@ static void Sk1nInstallRightSwipe(UIViewController *vc) {
     UIView *root = vc.view;
     if (!root) return;
 
+    // Avoid double-install: mark our pan with an associated object.
     for (UIGestureRecognizer *g in root.gestureRecognizers) {
-        if (g.tag == kSwipeTag) return;
+        if (objc_getAssociatedObject(g, kSwipeKey)) return;
     }
 
     if (!gRightSwipeHandler) gRightSwipeHandler = [Sk1nRightSwipeHandler new];
@@ -93,7 +95,7 @@ static void Sk1nInstallRightSwipe(UIViewController *vc) {
     UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc] initWithTarget:gRightSwipeHandler action:@selector(handlePan:)];
     pan.delegate = gRightSwipeHandler;
     pan.maximumNumberOfTouches = 1;
-    pan.tag = kSwipeTag;
+    objc_setAssociatedObject(pan, kSwipeKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     [root addGestureRecognizer:pan];
 
     SPKTrace(@"swipe_right_installed", nil);
