@@ -38,7 +38,8 @@ static BOOL CC27ViewIsInControlCenter(UIView *view) {
     if (!CC27Prefs.shared.enabled) return;
     if (!CC27ViewIsInControlCenter(self)) return;
     @try {
-        if (CC27Prefs.shared.glassChrome && ![CC27EditSession deviceUILocked]) [CC27Glass applyToModuleContainer:self];
+        // Use the era-aware gate so ios1/ios7 skins from Sk1n keep Control Center flatter.
+        if (CC27Prefs.shared.shouldApplyGlass && ![CC27EditSession deviceUILocked]) [CC27Glass applyToModuleContainer:self];
         if (CC27EditSession.shared.editing) {
             NSString *identifier = nil; UIView *v = self;
             while (v) {
@@ -77,6 +78,8 @@ static void CC27InstallHooks(void) {
         for (NSString *path in killPaths) if ([[NSFileManager defaultManager] fileExistsAtPath:path]) { NSLog(@"[CC27] kill switch present at %@ — not loading", path); return; }
         [CC27Prefs.shared reload];
         CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, CC27ReloadPrefs, CFSTR("com.kolby.cc27/ReloadPrefs"), NULL, CFNotificationSuspensionBehaviorCoalesce);
+        // Also reload when Sk1n changes skin so the era gate stays current.
+        CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, CC27ReloadPrefs, CFSTR("com.kolby.sk1n/ReloadPrefs"), NULL, CFNotificationSuspensionBehaviorCoalesce);
         __block id token = nil;
         token = [[NSNotificationCenter defaultCenter] addObserverForName:UIApplicationDidFinishLaunchingNotification object:nil queue:NSOperationQueue.mainQueue usingBlock:^(__unused NSNotification *note) {
             if (token) { [[NSNotificationCenter defaultCenter] removeObserver:token]; token = nil; }

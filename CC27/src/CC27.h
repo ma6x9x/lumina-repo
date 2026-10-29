@@ -15,6 +15,10 @@ FOUNDATION_EXPORT NSString * const CC27LayoutDidChangeNotification;
 @property (nonatomic, readonly) BOOL allowResize;
 @property (nonatomic, readonly) BOOL showTopButtons;
 @property (nonatomic, readonly) BOOL hapticFeedback;
+
+/// YES when Sk1n is active and its skin is glass27 (or stock). NO for ios1/ios7 so Control Center stays flatter.
+/// Falls back to the local glassChrome pref if Sk1n prefs are missing.
+@property (nonatomic, readonly) BOOL shouldApplyGlass;
 @end
 
 @interface CC27Glass : NSObject

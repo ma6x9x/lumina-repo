@@ -112,7 +112,7 @@
 }
 
 + (void)applyToModuleContainer:(UIView *)view {
-    if (!view || !CC27Prefs.shared.glassChrome) return;
+    if (!view || !CC27Prefs.shared.shouldApplyGlass) return;
 
     // Expanded popovers: do not clip — that cut Camera / Connectivity menus.
     if ([self _looksExpanded:view]) {

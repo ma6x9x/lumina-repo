@@ -55,6 +55,26 @@ static NSDictionary *CC27ReadPrefsDictionary(void) {
     return @{};
 }
 
+// Read Sk1n's active skin so CC27 can stay era-appropriate without a hard dependency.
+static NSString *CC27ReadSk1nActiveSkin(void) {
+    NSArray *candidates = @[
+        @"/var/jb/var/mobile/Library/Preferences/com.kolby.sk1n.plist",
+        @"/var/mobile/Library/Preferences/com.kolby.sk1n.plist"
+    ];
+    NSString *jb = CC27JailbreakRootPrefix();
+    if (jb.length > 0) {
+        candidates = [@[ [jb stringByAppendingString:@"/var/mobile/Library/Preferences/com.kolby.sk1n.plist"] ] arrayByAddingObjectsFromArray:candidates];
+    }
+    for (NSString *path in candidates) {
+        NSDictionary *dict = [NSDictionary dictionaryWithContentsOfFile:path];
+        if ([dict isKindOfClass:NSDictionary.class]) {
+            id skin = dict[@"activeSkin"];
+            if ([skin isKindOfClass:NSString.class] && [skin length]) return skin;
+        }
+    }
+    return nil;
+}
+
 @implementation CC27Prefs {
     // Values are resolved once per reload and cached here. Pref getters are hit
     // from hot paths (every module layoutSubviews); a cfprefsd XPC round-trip
@@ -65,6 +85,7 @@ static NSDictionary *CC27ReadPrefsDictionary(void) {
     BOOL _allowResize;
     BOOL _showTopButtons;
     BOOL _hapticFeedback;
+    BOOL _shouldApplyGlass;
 }
 
 + (instancetype)shared {
@@ -103,6 +124,18 @@ static BOOL CC27ResolveBool(NSDictionary *plist, NSString *key, BOOL fallback) {
     _allowResize     = CC27ResolveBool(plist, @"allowResize", NO);
     _showTopButtons  = CC27ResolveBool(plist, @"showTopButtons", YES);
     _hapticFeedback  = CC27ResolveBool(plist, @"hapticFeedback", YES);
+
+    // Sk1n era gate: ios1 / ios7 suppress glass; glass27 / stock keep it.
+    NSString *sk1nSkin = CC27ReadSk1nActiveSkin();
+    if (sk1nSkin) {
+        if ([sk1nSkin isEqualToString:@"ios1"] || [sk1nSkin isEqualToString:@"ios7"]) {
+            _shouldApplyGlass = NO;
+        } else {
+            _shouldApplyGlass = _glassChrome;
+        }
+    } else {
+        _shouldApplyGlass = _glassChrome;
+    }
 }
 
 - (BOOL)enabled { return _enabled; }
@@ -111,5 +144,6 @@ static BOOL CC27ResolveBool(NSDictionary *plist, NSString *key, BOOL fallback) {
 - (BOOL)allowResize { return _allowResize; }
 - (BOOL)showTopButtons { return _showTopButtons; }
 - (BOOL)hapticFeedback { return _hapticFeedback; }
+- (BOOL)shouldApplyGlass { return _shouldApplyGlass; }
 
 @end
