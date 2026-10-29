@@ -11,7 +11,7 @@
 //                artwork, used whenever the skin ships an icon file;
 //   2. real      UIKit's own render of the app's real icon (SPKRealIconForBundleID)
 //                — covers every app the skin does not carry art for; iOS 1-6
-//                gets a subtle gloss, iOS 7 and glass27 artwork untouched
+//                gets a stronger classic gloss, iOS 7 and glass27 artwork untouched
 //                (that art is already the era's own look);
 //   3. themed    SnowBoard/Anemone IconBundles artwork as a last resort.
 //
@@ -88,9 +88,8 @@ static UIImage *Sk1nRenderChrome(UIImage *base, void (^draw)(CGRect px, CGContex
         : base;
 }
 
-/// iOS 1-6 chrome over the real artwork: the base is clipped to the era's
-/// squircle, a white sheen falls across the top half, and a hairline
-/// highlight runs the inner edge — a lit glass tile, no shipped artwork.
+/// iOS 1-6 chrome over the real artwork: stronger classic gloss matching
+/// original 2007-2012 photos (bright top sheen, soft falloff, hairline highlight).
 static UIImage *Sk1nChromeIOS1(UIImage *base) {
     return Sk1nRenderChrome(base, ^(CGRect px, CGContextRef cg) {
         CGPathRef clip = Sk1nSquirclePath(px.size, 0);
@@ -99,28 +98,28 @@ static UIImage *Sk1nChromeIOS1(UIImage *base) {
         CGContextClip(cg);
         [base drawInRect:px];
 
-        // Sheen: white gradient, strongest at the crown, gone by 58%.
+        // Stronger sheen: brighter at the crown, falls off by ~55%.
         CGContextSaveGState(cg);
         CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
-        CGFloat comps[] = { 1.0, 1.0, 1.0, 0.22,  1.0, 1.0, 1.0, 0.12,  1.0, 1.0, 1.0, 0.0 };
-        CGFloat locs[]  = { 0.0, 0.30, 0.45 };
+        CGFloat comps[] = { 1.0, 1.0, 1.0, 0.38,  1.0, 1.0, 1.0, 0.18,  1.0, 1.0, 1.0, 0.0 };
+        CGFloat locs[]  = { 0.0, 0.22, 0.52 };
         CGGradientRef g = CGGradientCreateWithColorComponents(cs, comps, locs, 3);
         if (g) {
             CGContextDrawLinearGradient(cg, g,
                 CGPointMake(CGRectGetMidX(px), 0),
-                CGPointMake(CGRectGetMidX(px), CGRectGetMinY(px) + 0.58 * px.size.height), 0);
+                CGPointMake(CGRectGetMidX(px), CGRectGetMinY(px) + 0.55 * px.size.height), 0);
             CGGradientRelease(g);
         }
         CGColorSpaceRelease(cs);
         CGContextRestoreGState(cg);
 
-        // Hairline highlight along the inner edge, the way the old tiles had.
+        // Inner edge highlight (classic glass tile).
         CGContextSaveGState(cg);
-        CGPathRef inner = Sk1nSquirclePath(px.size, 2);
+        CGPathRef inner = Sk1nSquirclePath(px.size, 1.5);
         CGContextAddPath(cg, inner);
         CGPathRelease(inner);
-        CGContextSetStrokeColorWithColor(cg, [UIColor colorWithWhite:1 alpha:0.14].CGColor);
-        CGContextSetLineWidth(cg, 2.0);
+        CGContextSetStrokeColorWithColor(cg, [UIColor colorWithWhite:1 alpha:0.22].CGColor);
+        CGContextSetLineWidth(cg, 1.8);
         CGContextStrokePath(cg);
         CGContextRestoreGState(cg);
     });

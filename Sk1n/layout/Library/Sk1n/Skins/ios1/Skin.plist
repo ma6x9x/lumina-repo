@@ -5,9 +5,9 @@
 	<key>colors</key>
 	<dict>
 		<key>dockBottom</key>
-		<string>#101216</string>
+		<string>#0C0E12</string>
 		<key>dockTop</key>
-		<string>#4A4F5A</string>
+		<string>#5A6270</string>
 		<key>label</key>
 		<string>#FFFFFF</string>
 		<key>tint</key>
@@ -56,6 +56,6 @@
 	<key>sounds</key>
 	<dict/>
 	<key>version</key>
-	<string>0.1.0</string>
+	<string>0.2.2</string>
 </dict>
 </plist>

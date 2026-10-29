@@ -4,13 +4,20 @@ One setting + a respring re-skins SpringBoard in a prepackaged era:
 
 | Skin id | Era | Icon catalog |
 |---------|-----|--------------|
-| `ios1` | iOS 1-6, skeuomorphic: glossy icons, glossy dock shelf, black status bar, Helvetica labels | authentic iOS 6 set (zagnut531/iOS-6-Icons, 59 apps incl. era third-party + credited era-styled recreations) + engine fallback |
-| `ios7` | iOS 7, flat | Okapi flat pack (JustAnOkapi, Unlicense, 39 apps) + generated flat set |
-| `glass27` | iOS 26/27 Liquid Glass (UIGlassEffect on iOS 26+, material blur below) | the device's real icons, untouched — that artwork is this era's own look |
+| `ios1` | iOS 1-6, skeuomorphic: glossy icons (strong top sheen), metallic dock shelf, black status bar, Helvetica-Bold labels | authentic iOS 6 set (zagnut531/iOS-6-Icons, extracted from real devices) + stronger runtime gloss on uncovered apps |
+| `ios7` | iOS 7, flat (no gloss, bright solid colors, simple frosted dock) | Okapi flat pack (JustAnOkapi, Unlicense) + generated flat set |
+| `glass27` | iOS 26/27 Liquid Glass (translucent layered icons, frosted Control Center, material blur) | the device's real icons, untouched — that artwork is this era's own look |
 | `stock` | no skin (default) | untouched |
 
 Bundle id `com.kolby.sk1n`. ObjC-only dylib, SpringBoard filter, rootless (Dopamine) and roothide packages.
 Prefs live in Settings > Sk1n (PreferenceLoader).
+
+## Visual accuracy notes
+
+Chrome is tuned against real era photos and side-by-sides:
+- iOS 1-6: Version Museum iPhone OS 1 galleries, Engadget 2007 UI shots, Ars Technica iOS 6 vs 7 comparisons. Gloss is a bright top-half sheen + inner hairline; dock is a metallic gradient shelf.
+- iOS 7: flat icons with no dimensional chrome (the 2013 break from skeuomorphism).
+- iOS 26/27: Apple Liquid Glass material (translucent, refractive icons and Control Center); no extra overlay is applied so the device's own art stays correct.
 
 ## Settings
 
@@ -53,14 +60,13 @@ Classes: `Sk1nSkin` (loader + strict validator), `Sk1nSkinStore` (discovery). `t
 Hooks `-[SBIconImageView contentsImage]` and `-displayedImage` and resolves one image per bundle id, automatically (no pref):
 
 1. **Authored skin artwork** - `<skin>/Icons/<bundle id>.png` (180px @3x; also @2x). The skin's own legacy-era icon files; **this always wins** - custom art is only ever consulted when the runtime has a file for the app.
-2. **Real artwork** - `SPKRealIconForBundleID()` (SPKit; `+[UIImage _applicationIconImageForBundleIdentifier:format:scale:]`, format 2, the call device-verified through SwiftPeek's icon inventory). Era chrome is drawn over it only for iOS 1-6, and it is subtle (light sheen + faint inner hairline inside a 22.4% mask); **iOS 7 and glass27 get no chrome** — their eras' artwork is flat/modern already, and chrome is what made the live-generated look messy. Covers every app the skin does not carry an icon for.
+2. **Real artwork** - `SPKRealIconForBundleID()` (SPKit; `+[UIImage _applicationIconImageForBundleIdentifier:format:scale:]`, format 2, the call device-verified through SwiftPeek's icon inventory). Era chrome is drawn over it only for iOS 1-6 (stronger classic gloss matching 2007-2012 photos); **iOS 7 and glass27 get no chrome** — their eras' artwork is already flat/modern. Covers every app the skin does not carry an icon for.
 3. **Themer artwork** - `SPKThemeIconForBundleID()` (first SnowBoard/Anemone `IconBundles/<bundle id>[@3x|@2x|].png` hit), also chromed. Last resort.
 
 The bundled `<skin>/Icons` sets are era catalogs: era-true packs (see
 `tools/ICON_CATALOG.md` for sources and licences) first - authentic iOS 6 art
-for `ios1`, the Unlicense'd Okapi flat pack for `ios7` - and the engine's own
-generated set (`tools/sk1n-icons.py`, 24 stock bundle ids per era) where the
-packs have no file. **Original Apple artwork is not generated here**: the
+for `ios1` (extracted from real devices), the Unlicense'd Okapi flat pack for `ios7` - and the engine's own
+generated set (`tools/sk1n-icons.py`) where the packs have no file. **Original Apple artwork is not generated here**: the
 runtime renders the device's own icons (`SPKRealIconForBundleID`) for every
 app; the one Apple-artwork set (`ios1`) is authentic era art redistributed
 from the upstream pack under the terms noted in `tools/ICON_CATALOG.md`.
