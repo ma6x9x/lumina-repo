@@ -23,18 +23,17 @@ Chrome is tuned against real era photos and side-by-sides:
 
 - **Enable Sk1n** - master switch.
 - **Active Skin** - stock / iOS 1-6 / iOS 7 / Liquid Glass.
-- **Slide to Unlock** (`slideToUnlock`, off by default, *experimental*) - independent of the skin.
-  - **Slider Style** (`sliderStyle`: auto / ios1 / ios7 / glass27) - pick the slider look separately from the skin; `auto` follows the active skin's `slider` config.
-  - **Disable swipe-up gesture (risky)** (`slideToUnlockBlockSwipe`, off by default).
-- **Apply & Respring** - saves and respawns SpringBoard (`sbreload`, falling back to `killall -9 SpringBoard`) from the jbroot.
-- **Revert to Stock & Respring** - sets skin to `stock`, turns slider off, respring.
+- **Slide to Unlock** (`slideToUnlock`, off by default, *experimental*) - enables a **working swipe-up unlock** on the CoverSheet. When on, an upward swipe (distance or velocity) calls `SBLockScreenManager unlockUIFromSource:withOptions:`.
+  - **Slider Style** (`sliderStyle`: auto / ios1 / ios7 / glass27) - if set to anything other than `auto`, also installs the classic visual slider as a secondary control. `auto` follows the skin's own slider config (or installs nothing extra).
+- **Apply & Respring** - saves and respawns SpringBoard.
+- **Revert to Stock & Respring** - sets skin to `stock`, turns the unlock feature off, respring.
 
 ## Safety (fail closed)
 
-- **Kill switch:** `touch /var/jb/var/mobile/Library/Sk1n/DISABLE` (rootless; jbroot-resolved on roothide, via `SPKKillSwitchEngaged`). Checked first in the constructor and again before the slider installs.
-- **Crash-loop guard:** a `.loading` sentinel is written while loading and cleared 8 s after a successful load. If SpringBoard died in between, the next launch writes `DISABLE` and stands down. (Side effect: respringing again within 8 s of a launch also trips it - delete `DISABLE` to re-enable.)
-- Every hook is plain ObjC runtime replacement, guarded: a missing class/selector installs nothing and is traced (`hook_missing_class` / `hook_missing_selector`). Hook bodies are `@try`-wrapped and fall back to the stock result.
-- Invalid skins (bad plist, unsafe ids/paths, bad colours) are rejected and never applied.
+- **Kill switch:** `touch /var/jb/var/mobile/Library/Sk1n/DISABLE` (rootless; jbroot-resolved on roothide). Checked first in the constructor.
+- **Crash-loop guard:** a `.loading` sentinel is written while loading and cleared 8 s after a successful load. If SpringBoard died in between, the next launch writes `DISABLE` and stands down.
+- Every hook is plain ObjC runtime replacement, guarded. Hook bodies are `@try`-wrapped.
+- Invalid skins are rejected and never applied.
 - `SPKTrace` is synchronous + fsync'd: `<jbroot>/var/mobile/Library/Sk1n/status.log`.
 
 ## Skin format
@@ -42,53 +41,33 @@ Chrome is tuned against real era photos and side-by-sides:
 ```
 layout/Library/Sk1n/Skins/<id>/
   Skin.plist
-  Icons/<bundle id>.png        # 180px (@3x); also <id>@2x.png / @3x.png
+  Icons/<bundle id>.png
 ```
 
 User skins can also be dropped in `<jbroot>/var/mobile/Library/Sk1n/Skins/<id>/` (searched first).
 
-`Skin.plist` keys: `id` (== directory name), `name`, `era` (`ios1|ios7|glass27`), `version`, `colors` (name -> `#RRGGBB[AA]`; `dockTop`, `dockBottom`, `tint`, `label`), `fonts`, `iconsDirectory`, `lockscreen`, `sounds`, and:
-
-```
-slider = { style: ios1|ios7|glass27, text, textColor, thumbColor, trackColor, shimmer: bool }
-```
-
-Classes: `Sk1nSkin` (loader + strict validator), `Sk1nSkinStore` (discovery). `tools/validate-skins.py` is the Python twin of the validator and runs in CI.
-
 ## Icon override engine
 
-Hooks `-[SBIconImageView contentsImage]` and `-displayedImage` and resolves one image per bundle id, automatically (no pref):
+Hooks `-[SBIconImageView contentsImage]` and `-displayedImage`:
 
-1. **Authored skin artwork** - `<skin>/Icons/<bundle id>.png` (180px @3x; also @2x). The skin's own legacy-era icon files; **this always wins** - custom art is only ever consulted when the runtime has a file for the app.
-2. **Real artwork** - `SPKRealIconForBundleID()` (SPKit; `+[UIImage _applicationIconImageForBundleIdentifier:format:scale:]`, format 2, the call device-verified through SwiftPeek's icon inventory). Era chrome is drawn over it only for iOS 1-6 (stronger classic gloss matching 2007-2012 photos); **iOS 7 and glass27 get no chrome** — their eras' artwork is already flat/modern. Covers every app the skin does not carry an icon for.
-3. **Themer artwork** - `SPKThemeIconForBundleID()` (first SnowBoard/Anemone `IconBundles/<bundle id>[@3x|@2x|].png` hit), also chromed. Last resort.
+1. **Authored skin artwork** - `<skin>/Icons/<bundle id>.png` always wins.
+2. **Real artwork** - `SPKRealIconForBundleID()`. iOS 1-6 gets stronger classic gloss; iOS 7 and glass27 stay untouched.
+3. **Themer artwork** - last resort.
 
-The bundled `<skin>/Icons` sets are era catalogs: era-true packs (see
-`tools/ICON_CATALOG.md` for sources and licences) first - authentic iOS 6 art
-for `ios1` (extracted from real devices), the Unlicense'd Okapi flat pack for `ios7` - and the engine's own
-generated set (`tools/sk1n-icons.py`) where the packs have no file. **Original Apple artwork is not generated here**: the
-runtime renders the device's own icons (`SPKRealIconForBundleID`) for every
-app; the one Apple-artwork set (`ios1`) is authentic era art redistributed
-from the upstream pack under the terms noted in `tools/ICON_CATALOG.md`.
+See `tools/ICON_CATALOG.md` for sources and licences.
 
-**Which of the two SpringBoard hooks actually reads on iOS 16/17 rootless is not verified from CI** - both are tried; the trace shows which installed. Folders, widgets and many modern icon paths may not be covered.
+## Unlock (swipe-up)
 
-## Slide to unlock
+When **Slide to Unlock** is enabled, Sk1n installs a vertical pan on `CSCoverSheetViewController`. An upward swipe that travels ~80 pt or has strong upward velocity calls the unlock method. The gesture allows simultaneous recognition so the stock Face ID / dismiss path still works. The classic visual slider is optional and only appears when a style is explicitly chosen.
 
-`Sk1nSlideToUnlockView` is a complete UIKit control (no private API): ios1 glossy dark track / silver thumb / shimmering text; ios7 flat capsule; glass27 glass capsule track + glass thumb, travelling specular shimmer, thumb swells and springs while held (`UIGlassEffect` found at runtime on iOS 26+, `UIBlurEffect` material below). Respects Reduce Motion, VoiceOver adjustable.
+The unlock call is the same one used previously; on a device that has not yet authenticated it may still surface the passcode or Face ID UI. That behavior is expected and is not suppressed.
 
-The lock screen wiring (`Sk1nLockScreen`) hooks `CSCoverSheetViewController -viewDidAppear:`, adds the slider, hides `CSTeachableMomentsContainerView` (the "swipe up" hint) and unlocks through `-[SBLockScreenManager unlockUIFromSource:withOptions:]`. **None of that could be verified without a device**: the unlock call may only raise the passcode/Face ID UI, and the swipe-up suppression is a name-based heuristic over gesture recognisers (the log lists the class names it saw, for the next device cycle). That is why the feature is off by default and swipe suppression is a second, separate opt-in.
+## Not done yet
 
-- **Badges and page dots** - per era, no extra setting: iOS 1-6 badges are the bright red pill with the raised white edge, iOS 7 badges are flat opaque red, glass27 badges are translucent glass capsules; page dots go solid dark for the legacy eras and take the skin tint for glass27. Badge and page-control classes are probed by name (`SBIconIconBadgeView` / `SBIconBadgeView` etc., `SBHomeScreenPageControl` / `SBPageControlView` etc.) - whatever exists installs, the trace records which.
-- **Status bar (ios1)** - black background for the classic 2007 look (probed `UIStatusBar` / `SBStatusBar` / `_UIStatusBar`).
-- **Icon labels (ios1)** - Helvetica-Bold 11pt with white text and subtle shadow (probed `SBIconLabelView` / `SBIconView`).
-
-## Not done yet (honest list)
-
-- `fonts` and `sounds` in Skin.plist are parsed/validated but not applied/played.
-- Liquid Glass here is the blur/`UIGlassEffect` approach, not the Siri27 Metal `LGGlassRenderer` pipeline.
-- Dock plate hook (`SBDockView -layoutSubviews`), badge, page-dot, status bar, and label hooks are style-only and **unverified on device** - a renamed private class costs the feature, not the home screen; the trace names what installed (or was absent). The glass27 dock tries a runtime-found `UIGlassEffect`, same approach as the slider, with the material blur as the floor.
+- `fonts` and `sounds` in Skin.plist are parsed but not applied.
+- Liquid Glass here is the blur/`UIGlassEffect` approach, not the Siri27 Metal pipeline.
+- Dock / badge / status-bar / label hooks are style-only and unverified on device.
 
 ## Build
 
-macOS only (Theos + Xcode); see `.github/workflows/build-sk1n.yml`. `src/spkit` is a symlink to `../../SPKit` (Theos object paths), compiled with `-DSPK_CLASS_PREFIX=Sk1nSPK`; `sk1nprefs/shared` symlinks `../src` for the respring helper.
+macOS only (Theos + Xcode); see `.github/workflows/build-sk1n.yml`.

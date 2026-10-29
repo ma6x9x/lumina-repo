@@ -6,9 +6,10 @@
 #import <objc/message.h>
 
 static const NSInteger kSliderTag = 0x5E1D;
+static const NSInteger kSwipeTag  = 0x5E1E;
 static Sk1nEra gStyle;
 static NSDictionary *gConfig;
-static BOOL gBlockSwipe;
+static BOOL gInstallClassic;
 
 static BOOL Sk1nAttemptUnlock(void) {
     @try {
@@ -30,7 +31,6 @@ static BOOL Sk1nAttemptUnlock(void) {
 }
 
 static void Sk1nHideHint(UIView *root) {
-    // "Swipe up to unlock" hint lives in CSTeachableMomentsContainerView (by name; best effort).
     Class hint = NSClassFromString(@"CSTeachableMomentsContainerView");
     if (!hint) return;
     NSMutableArray *stack = [NSMutableArray arrayWithObject:root];
@@ -41,32 +41,67 @@ static void Sk1nHideHint(UIView *root) {
     }
 }
 
-static void Sk1nDisableSwipeGestures(UIView *root) {
-    NSMutableArray *stack = [NSMutableArray arrayWithObject:root];
-    NSMutableArray *names = [NSMutableArray array];
-    while (stack.count) {
-        UIView *v = stack.lastObject; [stack removeLastObject];
-        if (v.tag == kSliderTag) continue;
-        for (UIGestureRecognizer *g in v.gestureRecognizers) {
-            NSString *n = NSStringFromClass(g.class);
-            [names addObject:n];
-            if ([n rangeOfString:@"Dismiss" options:NSCaseInsensitiveSearch].location != NSNotFound ||
-                [n rangeOfString:@"Unlock" options:NSCaseInsensitiveSearch].location != NSNotFound) {
-                g.enabled = NO;
-                SPKTrace(@"swipe_gesture_disabled", @{@"class": n});
-            }
-        }
-        [stack addObjectsFromArray:v.subviews];
-    }
-    // Discovery data for the next device cycle: which recognisers exist at all.
-    SPKTrace(@"coversheet_gestures", @{@"classes": [names componentsJoinedByString:@","]});
+#pragma mark - Working swipe-up
+
+@interface Sk1nSwipeUpHandler : NSObject <UIGestureRecognizerDelegate>
+@property (nonatomic, weak) UIView *host;
+@end
+
+@implementation Sk1nSwipeUpHandler
+
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)g shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)other {
+    return YES; // coexist with stock dismiss / Face ID gestures
 }
 
-static void Sk1nInstallSlider(UIViewController *vc) {
-    if (SPKKillSwitchEngaged(SK1N_SUBDIR)) return;
+- (void)handlePan:(UIPanGestureRecognizer *)pan {
+    if (pan.state != UIGestureRecognizerStateEnded && pan.state != UIGestureRecognizerStateCancelled) return;
+
+    CGPoint vel = [pan velocityInView:pan.view];
+    CGPoint trans = [pan translationInView:pan.view];
+
+    // Upward = negative y. Require either a decent distance or a flick.
+    BOOL farEnough   = trans.y < -80;
+    BOOL fastEnough  = vel.y   < -400;
+    BOOL mostlyVertical = fabs(trans.x) < fabs(trans.y) * 1.4;
+
+    if ((farEnough || fastEnough) && mostlyVertical) {
+        SPKTrace(@"swipe_up_unlock", @{@"transY": @(trans.y).stringValue, @"velY": @(vel.y).stringValue});
+        Sk1nAttemptUnlock();
+    }
+}
+
+@end
+
+static Sk1nSwipeUpHandler *gSwipeHandler;
+
+static void Sk1nInstallSwipeUp(UIViewController *vc) {
+    UIView *root = vc.view;
+    if (!root) return;
+
+    // Avoid double-install
+    for (UIGestureRecognizer *g in root.gestureRecognizers) {
+        if (g.tag == kSwipeTag) return;
+    }
+
+    if (!gSwipeHandler) gSwipeHandler = [Sk1nSwipeUpHandler new];
+    gSwipeHandler.host = root;
+
+    UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc] initWithTarget:gSwipeHandler action:@selector(handlePan:)];
+    pan.delegate = gSwipeHandler;
+    pan.maximumNumberOfTouches = 1;
+    pan.tag = kSwipeTag;
+    [root addGestureRecognizer:pan];
+
+    SPKTrace(@"swipe_up_installed", nil);
+}
+
+#pragma mark - Optional classic slider
+
+static void Sk1nInstallClassicSlider(UIViewController *vc) {
+    if (!gInstallClassic) return;
     UIView *root = vc.view;
     if (!root || [root viewWithTag:kSliderTag]) return;
-    SPKTrace(@"slider_install_begin", nil);
+
     CGSize sz = [Sk1nSlideToUnlockView preferredSizeForStyle:gStyle containerWidth:root.bounds.size.width];
     Sk1nSlideToUnlockView *s = [[Sk1nSlideToUnlockView alloc]
         initWithFrame:CGRectMake((root.bounds.size.width - sz.width) / 2,
@@ -81,29 +116,38 @@ static void Sk1nInstallSlider(UIViewController *vc) {
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.3 * NSEC_PER_SEC)),
                            dispatch_get_main_queue(), ^{ [weak reset]; });
         } else {
-            // Re-arm for the next lock.
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.5 * NSEC_PER_SEC)),
                            dispatch_get_main_queue(), ^{ [weak reset]; });
         }
     };
     [root addSubview:s];
     Sk1nHideHint(root);
-    if (gBlockSwipe) Sk1nDisableSwipeGestures(root);
-    SPKTrace(@"slider_install_result", @{@"style": Sk1nEraName(gStyle) ?: @"?"});
+    SPKTrace(@"classic_slider_installed", @{@"style": Sk1nEraName(gStyle) ?: @"?"});
 }
 
-NSUInteger Sk1nLockScreenInstall(Sk1nEra style, NSDictionary *cfg, BOOL blockSwipe) {
-    gStyle = style; gConfig = [cfg copy]; gBlockSwipe = blockSwipe;
+#pragma mark - Install
+
+static void Sk1nOnCoverSheetAppear(UIViewController *vc) {
+    if (SPKKillSwitchEngaged(SK1N_SUBDIR)) return;
+    @try {
+        Sk1nInstallSwipeUp(vc);
+        Sk1nInstallClassicSlider(vc);
+    } @catch (NSException *ex) {
+        SPKTrace(@"lockscreen_install_exception", @{@"reason": ex.reason ?: @""});
+    }
+}
+
+NSUInteger Sk1nLockScreenInstall(Sk1nEra style, NSDictionary *cfg, BOOL installClassicSlider) {
+    gStyle = style;
+    gConfig = [cfg copy];
+    gInstallClassic = installClassicSlider;
+
     NSUInteger n = 0;
     SEL sel = @selector(viewDidAppear:);
     IMP orig = Sk1nHookNamed(@"CSCoverSheetViewController", sel, ^id(IMP orig) {
         return ^void(UIViewController *self_, BOOL animated) {
             ((void (*)(id, SEL, BOOL))orig)(self_, sel, animated);
-            @try {
-                Sk1nInstallSlider(self_);
-            } @catch (NSException *ex) {
-                SPKTrace(@"slider_install_exception", @{@"reason": ex.reason ?: @""});
-            }
+            Sk1nOnCoverSheetAppear(self_);
         };
     });
     if (orig) n++;

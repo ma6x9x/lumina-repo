@@ -24,7 +24,6 @@ static void Sk1nInit(void) {
     @autoreleasepool {
         if (![NSBundle.mainBundle.bundleIdentifier isEqualToString:@"com.apple.springboard"]) return;
 
-        // Before anything that could crash: tracing must record the crash it explains.
         SPKTraceConfigure(SK1N_SUBDIR, SK1N_VERSION);
         SPKTrace(@"ctor_begin", @{@"version": SK1N_VERSION});
 
@@ -35,14 +34,12 @@ static void Sk1nInit(void) {
         if (!Sk1nPrefEnabled()) { SPKTrace(@"disabled_by_pref", nil); return; }
 
         NSString *skinID = Sk1nPrefActiveSkinID();
-        BOOL wantSlider = Sk1nPrefSlideToUnlock();
-        if ([skinID isEqualToString:@"stock"] && !wantSlider) {
+        BOOL wantUnlock = Sk1nPrefSlideToUnlock();
+        if ([skinID isEqualToString:@"stock"] && !wantUnlock) {
             SPKTrace(@"stock_nothing_to_do", nil);
             return;
         }
 
-        // Crash-loop guard: if the previous launch never got to clear the sentinel,
-        // SpringBoard died while we were loading. Engage the kill switch and stand down.
         NSFileManager *fm = NSFileManager.defaultManager;
         NSString *sentinel = Sk1nSentinelPath();
         [fm createDirectoryAtPath:[sentinel stringByDeletingLastPathComponent]
@@ -79,38 +76,38 @@ static void Sk1nInit(void) {
                 }
             }
 
-            if (wantSlider) {
-                // Slider style is independent of the skin. "auto" follows the skin's
-                // own slider config; an explicit style uses that era's built-in
-                // look (with the skin's text/colour overrides if the skin has any).
+            if (wantUnlock) {
+                // Swipe-up is always the working path when the feature is on.
+                // Classic slider is only added when the user explicitly picks a style
+                // other than "auto" (or when the skin itself requests one).
                 NSString *pick = Sk1nPrefSliderStyle();
                 Sk1nEra era = Sk1nEraIOS1; BOOL haveEra = NO;
                 NSDictionary *cfg = skin.slider;
+                BOOL wantClassic = NO;
+
                 if ([pick isEqualToString:@"auto"]) {
-                    if (skin) {
+                    if (skin && cfg) {
                         haveEra = Sk1nEraFromName(cfg[@"style"], &era);
-                        if (!haveEra) { era = skin.era; haveEra = YES; }
-                    } else {
-                        era = Sk1nEraIOS1; haveEra = YES; cfg = nil; // stock skin + slider: classic
+                        wantClassic = haveEra; // skin asked for a visual slider
                     }
                 } else {
                     haveEra = Sk1nEraFromName(pick, &era);
+                    wantClassic = haveEra;
                     if (skin && haveEra) {
-                        // Only reuse the skin's config if it targets the same era.
                         Sk1nEra cfgEra;
                         if (!(Sk1nEraFromName(cfg[@"style"], &cfgEra) && cfgEra == era)) cfg = nil;
                     } else cfg = nil;
                 }
-                if (haveEra) {
-                    NSUInteger n = Sk1nLockScreenInstall(era, cfg, Sk1nPrefBlockSwipe());
-                    SPKTrace(@"lockscreen_hooks", @{@"installed": @(n).stringValue, @"style": Sk1nEraName(era) ?: @"?"});
-                }
+
+                NSUInteger n = Sk1nLockScreenInstall(haveEra ? era : Sk1nEraIOS1, cfg, wantClassic);
+                SPKTrace(@"lockscreen_hooks", @{@"installed": @(n).stringValue,
+                                                @"swipe_up": @"1",
+                                                @"classic_slider": wantClassic ? @"1" : @"0"});
             }
         } @catch (NSException *ex) {
             SPKTrace(@"ctor_exception", @{@"reason": ex.reason ?: @""});
         }
 
-        // Survived load: clear the crash-loop sentinel after SpringBoard has had time to settle.
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(8 * NSEC_PER_SEC)),
                        dispatch_get_main_queue(), ^{
             [NSFileManager.defaultManager removeItemAtPath:Sk1nSentinelPath() error:nil];
