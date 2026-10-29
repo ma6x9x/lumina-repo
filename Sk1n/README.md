@@ -6,7 +6,7 @@ One setting + a respring re-skins SpringBoard in a prepackaged era:
 |---------|-----|--------------|
 | `ios1` | iOS 1-6, skeuomorphic: glossy icons (strong top sheen), metallic dock shelf, black status bar, Helvetica-Bold labels | authentic iOS 6 set (zagnut531/iOS-6-Icons, extracted from real devices) + stronger runtime gloss on uncovered apps |
 | `ios7` | iOS 7, flat (no gloss, bright solid colors, simple frosted dock) | Okapi flat pack (JustAnOkapi, Unlicense) + generated flat set |
-| `glass27` | iOS 26/27 Liquid Glass (translucent layered icons, frosted Control Center, material blur) | the device's real icons, untouched — that artwork is this era's own look |
+| `glass27` | iOS 26/27 Liquid Glass (translucent layered icons, frosted Control Center, material blur) | **Solid Glass 27** (iVintageLover/Solid-Glass) when imported; otherwise the device's real icons |
 | `stock` | no skin (default) | untouched |
 
 Bundle id `com.kolby.sk1n`. ObjC-only dylib, SpringBoard filter, rootless (Dopamine) and roothide packages.
@@ -17,7 +17,7 @@ Prefs live in Settings > Sk1n (PreferenceLoader).
 Chrome is tuned against real era photos and side-by-sides:
 - iOS 1-6: Version Museum iPhone OS 1 galleries, Engadget 2007 UI shots, Ars Technica iOS 6 vs 7 comparisons. Gloss is a bright top-half sheen + inner hairline; dock is a metallic gradient shelf.
 - iOS 7: flat icons with no dimensional chrome (the 2013 break from skeuomorphism).
-- iOS 26/27: Apple Liquid Glass material (translucent, refractive icons and Control Center); no extra overlay is applied so the device's own art stays correct.
+- iOS 26/27: Apple Liquid Glass material. Preferred authored set is **Solid Glass 27** from https://github.com/iVintageLover/Solid-Glass (see `tools/ICON_CATALOG.md` for extraction + import steps). Authored icons win over real device artwork.
 
 ## Settings
 
@@ -51,10 +51,10 @@ User skins can also be dropped in `<jbroot>/var/mobile/Library/Sk1n/Skins/<id>/`
 Hooks `-[SBIconImageView contentsImage]` and `-displayedImage`:
 
 1. **Authored skin artwork** - `<skin>/Icons/<bundle id>.png` always wins.
-2. **Real artwork** - `SPKRealIconForBundleID()`. iOS 1-6 gets stronger classic gloss; iOS 7 and glass27 stay untouched.
+2. **Real artwork** - `SPKRealIconForBundleID()`. iOS 1-6 gets stronger classic gloss; iOS 7 and glass27 stay untouched unless an authored icon exists.
 3. **Themer artwork** - last resort.
 
-See `tools/ICON_CATALOG.md` for sources and licences.
+See `tools/ICON_CATALOG.md` for sources and licences, including how to import Solid Glass 27.
 
 ## Unlock (classic right-swipe)
 

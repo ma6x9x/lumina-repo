@@ -28,21 +28,36 @@ https://github.com/JustAnOkapi/Okapi-Icons-Bulk — the `Okapi Icons.theme`
 icon bundle set. **Licence: The Unlicense** (public domain). Nothing in this
 set is Apple artwork. This is the preferred authored set for the iOS 7 skin.
 
-## glass27
+## iVintageLover/Solid-Glass → `glass27`
 
-Ships no artwork. The device's own real icons, rendered at runtime and not
-chromed — modern home-screen art is already the Liquid Glass era's look.
+https://github.com/iVintageLover/Solid-Glass — Solid Glass 27 (and the
+companion Solid Glass 26 package). These are the real iOS 26/27 Liquid Glass
+icons backported for jailbroken devices. The latest release is on the
+[releases page](https://github.com/iVintageLover/Solid-Glass/releases).
+
+**How to import:**
+```bash
+# download the latest .deb (Solid Glass 27 Rootless or Rootful)
+mkdir -p /tmp/sk1n-catalog/Solid-Glass
+dpkg-deb -x path/to/Solid-Glass-*.deb /tmp/sk1n-catalog/Solid-Glass
+# adjust theme_dir in PACKS["solidglass27"] if the IconBundles folder
+# lives deeper after extraction, then:
+python3 tools/import-iconpack.py solidglass27
+```
+
+**Licence:** check the upstream repo / package. Redistributed here as era
+reference for a personal theming package. Authored icons from this pack win
+over real device artwork for the glass27 skin.
+
+## glass27 (fallback)
+
+If no Solid Glass icons are present, the skin falls back to the device's own
+real icons (untouched). Once the pack is imported, the authored set is used.
 
 ## The generated set (every era)
 
 `tools/sk1n-icons.py` draws the fallback set for the stock bundle ids in
 `ios1` and `ios7` from scratch (PIL primitives) — original art, no Apple
 artwork copied, traced or upscaled. These are the apps none of the packs
-cover.
-
-**iOS 7 generation (updated):** pure flat solid fills with cleaner geometric
-glyphs sized and weighted to match real 2013 iOS 7 reference sheets. No
-gradients, no gloss. The Okapi pack still wins when it has a file; the
-generator only fills the gaps.
-
-The `glass27` skin ships no generated set (see above).
+cover. The glass27 skin does not ship a generated set; it uses Solid Glass
+27 when available.

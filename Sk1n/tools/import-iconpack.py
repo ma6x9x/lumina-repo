@@ -16,7 +16,14 @@ The pack's own files are never modified. Usage:
 
     pip install pillow
     python3 tools/import-iconpack.py PACKS_DIR            # all packs
-    python3 tools/import-iconpack.py zagnut5731           # one pack by key
+    python3 tools/import-iconpack.py zagnut531            # one pack by key
+
+Solid Glass 27 (glass27):
+    # download the latest .deb from https://github.com/iVintageLover/Solid-Glass/releases
+    mkdir -p /tmp/sk1n-catalog/Solid-Glass
+    dpkg-deb -x Solid-Glass-*.deb /tmp/sk1n-catalog/Solid-Glass
+    # then point theme_dir at the extracted Anemone/SnowBoard theme folder
+    python3 tools/import-iconpack.py solidglass27
 """
 import sys
 from pathlib import Path
@@ -200,6 +207,16 @@ PACKS = {
         "era": "ios7",
         "kind": "iconbundles",
     },
+    "solidglass27": {
+        # https://github.com/iVintageLover/Solid-Glass - Solid Glass 27
+        # (iOS 26/27 Liquid Glass icons). Extract the .deb first:
+        #   dpkg-deb -x Solid-Glass-*.deb /tmp/sk1n-catalog/Solid-Glass
+        # Then set theme_dir to the extracted Anemone/SnowBoard theme folder
+        # that contains IconBundles/ or Bundles/.
+        "theme_dir": "Solid-Glass",
+        "era": "glass27",
+        "kind": "iconbundles",
+    },
 }
 
 def main():
@@ -217,7 +234,7 @@ def main():
         out.mkdir(parents=True, exist_ok=True)
         src = packs_root / cfg["theme_dir"]
         if not src.is_dir():
-            sys.exit(f"pack source not found: {src} — clone the pack first")
+            sys.exit(f"pack source not found: {src} — clone/extract the pack first")
         if cfg["kind"] == "iconbundles":
             n = import_iconbundles(src, out, cfg["era"])
         elif cfg["kind"] == "anemone":
