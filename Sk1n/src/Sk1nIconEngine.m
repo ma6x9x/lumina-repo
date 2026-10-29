@@ -88,8 +88,9 @@ static UIImage *Sk1nRenderChrome(UIImage *base, void (^draw)(CGRect px, CGContex
         : base;
 }
 
-/// iOS 1-6 chrome over the real artwork: stronger classic gloss matching
-/// original 2007-2012 photos (bright top sheen, soft falloff, hairline highlight).
+/// iOS 1-6 chrome over the real artwork: classic 2007-2012 glass tile gloss
+/// tuned against Version Museum / Engadget 2007 galleries and 2007.mobile.
+/// Bright crown highlight, soft mid falloff, subtle lower reflection, inner edge.
 static UIImage *Sk1nChromeIOS1(UIImage *base) {
     return Sk1nRenderChrome(base, ^(CGRect px, CGContextRef cg) {
         CGPathRef clip = Sk1nSquirclePath(px.size, 0);
@@ -98,28 +99,48 @@ static UIImage *Sk1nChromeIOS1(UIImage *base) {
         CGContextClip(cg);
         [base drawInRect:px];
 
-        // Stronger sheen: brighter at the crown, falls off by ~55%.
+        // Top sheen: intense white at the very top, rapid falloff (classic plastic/glass).
         CGContextSaveGState(cg);
         CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
-        CGFloat comps[] = { 1.0, 1.0, 1.0, 0.38,  1.0, 1.0, 1.0, 0.18,  1.0, 1.0, 1.0, 0.0 };
-        CGFloat locs[]  = { 0.0, 0.22, 0.52 };
-        CGGradientRef g = CGGradientCreateWithColorComponents(cs, comps, locs, 3);
+        CGFloat comps[] = {
+            1.0, 1.0, 1.0, 0.55,  // brighter crown
+            1.0, 1.0, 1.0, 0.28,
+            1.0, 1.0, 1.0, 0.08,
+            1.0, 1.0, 1.0, 0.0
+        };
+        CGFloat locs[]  = { 0.0, 0.12, 0.32, 0.48 };
+        CGGradientRef g = CGGradientCreateWithColorComponents(cs, comps, locs, 4);
         if (g) {
             CGContextDrawLinearGradient(cg, g,
                 CGPointMake(CGRectGetMidX(px), 0),
-                CGPointMake(CGRectGetMidX(px), CGRectGetMinY(px) + 0.55 * px.size.height), 0);
+                CGPointMake(CGRectGetMidX(px), CGRectGetMinY(px) + 0.50 * px.size.height), 0);
             CGGradientRelease(g);
         }
         CGColorSpaceRelease(cs);
         CGContextRestoreGState(cg);
 
+        // Subtle lower reflection band (old skeuomorphic icons often had a faint bottom glow).
+        CGContextSaveGState(cg);
+        CGColorSpaceRef cs2 = CGColorSpaceCreateDeviceRGB();
+        CGFloat comps2[] = { 1.0, 1.0, 1.0, 0.0,  1.0, 1.0, 1.0, 0.12,  1.0, 1.0, 1.0, 0.0 };
+        CGFloat locs2[]  = { 0.72, 0.86, 1.0 };
+        CGGradientRef g2 = CGGradientCreateWithColorComponents(cs2, comps2, locs2, 3);
+        if (g2) {
+            CGContextDrawLinearGradient(cg, g2,
+                CGPointMake(CGRectGetMidX(px), CGRectGetMinY(px) + 0.70 * px.size.height),
+                CGPointMake(CGRectGetMidX(px), CGRectGetMaxY(px)), 0);
+            CGGradientRelease(g2);
+        }
+        CGColorSpaceRelease(cs2);
+        CGContextRestoreGState(cg);
+
         // Inner edge highlight (classic glass tile).
         CGContextSaveGState(cg);
-        CGPathRef inner = Sk1nSquirclePath(px.size, 1.5);
+        CGPathRef inner = Sk1nSquirclePath(px.size, 1.25);
         CGContextAddPath(cg, inner);
         CGPathRelease(inner);
-        CGContextSetStrokeColorWithColor(cg, [UIColor colorWithWhite:1 alpha:0.22].CGColor);
-        CGContextSetLineWidth(cg, 1.8);
+        CGContextSetStrokeColorWithColor(cg, [UIColor colorWithWhite:1 alpha:0.28].CGColor);
+        CGContextSetLineWidth(cg, 1.6);
         CGContextStrokePath(cg);
         CGContextRestoreGState(cg);
     });
