@@ -21,15 +21,17 @@ static Sk1nSkin *gDockSkin;
         UIColor *bot = [skin colorNamed:@"dockBottom" fallback:[UIColor colorWithWhite:0.05 alpha:0.9]];
         switch (skin.era) {
             case Sk1nEraIOS1: {
-                // Glossy "shelf": dark gradient plus a hard-edged highlight on the upper half.
+                // Stronger classic glossy shelf: deeper gradient + brighter upper gloss.
                 _grad = [CAGradientLayer layer];
                 _grad.colors = @[(id)top.CGColor, (id)bot.CGColor];
                 [self.layer addSublayer:_grad];
                 _gloss = [CAGradientLayer layer];
-                _gloss.colors = @[(id)[UIColor colorWithWhite:1 alpha:0.28].CGColor,
-                                  (id)[UIColor colorWithWhite:1 alpha:0.06].CGColor];
-                _gloss.locations = @[@0, @1];
+                _gloss.colors = @[(id)[UIColor colorWithWhite:1 alpha:0.45].CGColor,
+                                  (id)[UIColor colorWithWhite:1 alpha:0.10].CGColor,
+                                  (id)[UIColor colorWithWhite:1 alpha:0.0].CGColor];
+                _gloss.locations = @[@0, @0.35, @0.6];
                 [self.layer addSublayer:_gloss];
+                self.layer.masksToBounds = YES;
                 break;
             }
             case Sk1nEraIOS7: {
@@ -69,7 +71,7 @@ static Sk1nSkin *gDockSkin;
 - (void)layoutSubviews {
     [super layoutSubviews];
     _grad.frame = self.bounds;
-    _gloss.frame = CGRectMake(0, 0, self.bounds.size.width, self.bounds.size.height * 0.5);
+    _gloss.frame = CGRectMake(0, 0, self.bounds.size.width, self.bounds.size.height * 0.55);
     _blur.frame = self.bounds;
 }
 @end

@@ -3,10 +3,10 @@
 #import "SPKRuntime.h"
 #import <objc/message.h>
 
-// Era chrome for the two most visible home-screen UI bits outside icon art:
-// icon badges and the page dots. All styles are drawn with plain
-// UIKit/CoreAnimation on top of whatever the stock view already renders, so
-// the fallback (nothing installed) is the stock look, never a crash.
+// Era chrome for the most visible home-screen UI bits outside icon art:
+// badges, page dots, status bar, and icon labels. All styles are drawn with
+// plain UIKit/CoreAnimation on top of whatever the stock view already renders,
+// so the fallback (nothing installed) is the stock look, never a crash.
 
 static Sk1nSkin *gSkin;
 
@@ -21,6 +21,16 @@ static NSArray<NSString *> *Sk1nBadgeClassNames(void) {
 // first. Same posture as badges: probe, guard, trace.
 static NSArray<NSString *> *Sk1nPageControlClassNames(void) {
     return @[@"SBHomeScreenPageControl", @"SBPageControlView", @"SBRootPageControl"];
+}
+
+// Status bar classes (probed; modern ones first).
+static NSArray<NSString *> *Sk1nStatusBarClassNames(void) {
+    return @[@"UIStatusBar", @"SBStatusBar", @"_UIStatusBar"];
+}
+
+// Icon label classes (SpringBoardHome).
+static NSArray<NSString *> *Sk1nLabelClassNames(void) {
+    return @[@"SBIconLabelView", @"SBIconView"];
 }
 
 #pragma mark - Badge styling
@@ -95,15 +105,47 @@ static void Sk1nStylePageControl(UIView *pc, Sk1nSkin *skin) {
     }
 }
 
+#pragma mark - Status bar (ios1 classic black)
+
+static void Sk1nStyleStatusBar(UIView *bar, Sk1nSkin *skin) {
+    if (skin.era != Sk1nEraIOS1) return;
+    // Force classic black bar for the 2007-era look.
+    bar.backgroundColor = [UIColor blackColor];
+    bar.opaque = YES;
+    // Try to darken any known subviews that carry the indicators.
+    for (UIView *sub in bar.subviews) {
+        if ([sub isKindOfClass:UIImageView.class] || [sub isKindOfClass:UILabel.class]) {
+            sub.tintColor = UIColor.whiteColor;
+        }
+    }
+}
+
+#pragma mark - Icon labels (Helvetica Bold + shadow for ios1)
+
+static void Sk1nStyleIconLabel(UIView *view, Sk1nSkin *skin) {
+    if (skin.era != Sk1nEraIOS1) return;
+    // Walk for a UILabel that is likely the icon title.
+    UILabel *label = nil;
+    if ([view isKindOfClass:UILabel.class]) label = (UILabel *)view;
+    else {
+        for (UIView *sub in view.subviews) {
+            if ([sub isKindOfClass:UILabel.class]) { label = (UILabel *)sub; break; }
+        }
+    }
+    if (!label) return;
+    label.font = [UIFont fontWithName:@"Helvetica-Bold" size:11] ?: [UIFont boldSystemFontOfSize:11];
+    label.textColor = [skin colorNamed:@"label" fallback:UIColor.whiteColor];
+    label.shadowColor = [UIColor colorWithWhite:0 alpha:0.7];
+    label.shadowOffset = CGSizeMake(0, 1);
+    label.textAlignment = NSTextAlignmentCenter;
+}
+
 #pragma mark - Install
 
 NSUInteger Sk1nBadgeChromeInstall(Sk1nSkin *skin) {
     gSkin = skin;
     NSUInteger n = 0;
     for (NSString *clsName in Sk1nBadgeClassNames()) {
-        // Layout is when both the bounds and the subview tree are valid;
-        // styling here re-applies on every relayout, so a SpringBoard that
-        // resets the layer can never fully win.
         IMP orig = Sk1nHookNamed(clsName, @selector(layoutSubviews), ^id(IMP or_) {
             return ^void(UIView *self_) {
                 ((void (*)(id, SEL))or_)(self_, @selector(layoutSubviews));
@@ -123,6 +165,36 @@ NSUInteger Sk1nPageDotsInstall(Sk1nSkin *skin) {
             return ^void(UIView *self_) {
                 ((void (*)(id, SEL))or_)(self_, @selector(layoutSubviews));
                 @try { Sk1nStylePageControl(self_, gSkin); } @catch (__unused id ex) {}
+            };
+        });
+        if (orig) n++;
+    }
+    return n;
+}
+
+NSUInteger Sk1nStatusBarInstall(Sk1nSkin *skin) {
+    gSkin = skin;
+    NSUInteger n = 0;
+    for (NSString *clsName in Sk1nStatusBarClassNames()) {
+        IMP orig = Sk1nHookNamed(clsName, @selector(layoutSubviews), ^id(IMP or_) {
+            return ^void(UIView *self_) {
+                ((void (*)(id, SEL))or_)(self_, @selector(layoutSubviews));
+                @try { Sk1nStyleStatusBar(self_, gSkin); } @catch (__unused id ex) {}
+            };
+        });
+        if (orig) n++;
+    }
+    return n;
+}
+
+NSUInteger Sk1nLabelChromeInstall(Sk1nSkin *skin) {
+    gSkin = skin;
+    NSUInteger n = 0;
+    for (NSString *clsName in Sk1nLabelClassNames()) {
+        IMP orig = Sk1nHookNamed(clsName, @selector(layoutSubviews), ^id(IMP or_) {
+            return ^void(UIView *self_) {
+                ((void (*)(id, SEL))or_)(self_, @selector(layoutSubviews));
+                @try { Sk1nStyleIconLabel(self_, gSkin); } @catch (__unused id ex) {}
             };
         });
         if (orig) n++;

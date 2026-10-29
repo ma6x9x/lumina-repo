@@ -4,7 +4,7 @@ One setting + a respring re-skins SpringBoard in a prepackaged era:
 
 | Skin id | Era | Icon catalog |
 |---------|-----|--------------|
-| `ios1` | iOS 1-6, skeuomorphic: glossy icons, glossy dock shelf | authentic iOS 6 set (zagnut531/iOS-6-Icons, 59 apps incl. era third-party + credited era-styled recreations) + engine fallback |
+| `ios1` | iOS 1-6, skeuomorphic: glossy icons, glossy dock shelf, black status bar, Helvetica labels | authentic iOS 6 set (zagnut531/iOS-6-Icons, 59 apps incl. era third-party + credited era-styled recreations) + engine fallback |
 | `ios7` | iOS 7, flat | Okapi flat pack (JustAnOkapi, Unlicense, 39 apps) + generated flat set |
 | `glass27` | iOS 26/27 Liquid Glass (UIGlassEffect on iOS 26+, material blur below) | the device's real icons, untouched — that artwork is this era's own look |
 | `stock` | no skin (default) | untouched |
@@ -74,12 +74,14 @@ from the upstream pack under the terms noted in `tools/ICON_CATALOG.md`.
 The lock screen wiring (`Sk1nLockScreen`) hooks `CSCoverSheetViewController -viewDidAppear:`, adds the slider, hides `CSTeachableMomentsContainerView` (the "swipe up" hint) and unlocks through `-[SBLockScreenManager unlockUIFromSource:withOptions:]`. **None of that could be verified without a device**: the unlock call may only raise the passcode/Face ID UI, and the swipe-up suppression is a name-based heuristic over gesture recognisers (the log lists the class names it saw, for the next device cycle). That is why the feature is off by default and swipe suppression is a second, separate opt-in.
 
 - **Badges and page dots** - per era, no extra setting: iOS 1-6 badges are the bright red pill with the raised white edge, iOS 7 badges are flat opaque red, glass27 badges are translucent glass capsules; page dots go solid dark for the legacy eras and take the skin tint for glass27. Badge and page-control classes are probed by name (`SBIconIconBadgeView` / `SBIconBadgeView` etc., `SBHomeScreenPageControl` / `SBPageControlView` etc.) - whatever exists installs, the trace records which.
+- **Status bar (ios1)** - black background for the classic 2007 look (probed `UIStatusBar` / `SBStatusBar` / `_UIStatusBar`).
+- **Icon labels (ios1)** - Helvetica-Bold 11pt with white text and subtle shadow (probed `SBIconLabelView` / `SBIconView`).
 
 ## Not done yet (honest list)
 
 - `fonts` and `sounds` in Skin.plist are parsed/validated but not applied/played.
 - Liquid Glass here is the blur/`UIGlassEffect` approach, not the Siri27 Metal `LGGlassRenderer` pipeline.
-- Dock plate hook (`SBDockView -layoutSubviews`), badge and page-dot hooks are style-only and **unverified on device** - a renamed private class costs the feature, not the home screen; the trace names what installed (or was absent). The glass27 dock tries a runtime-found `UIGlassEffect`, same approach as the slider, with the material blur as the floor.
+- Dock plate hook (`SBDockView -layoutSubviews`), badge, page-dot, status bar, and label hooks are style-only and **unverified on device** - a renamed private class costs the feature, not the home screen; the trace names what installed (or was absent). The glass27 dock tries a runtime-found `UIGlassEffect`, same approach as the slider, with the material blur as the floor.
 
 ## Build
 

@@ -66,13 +66,16 @@ static void Sk1nInit(void) {
                     SPKTrace(@"skin_loaded", @{@"id": skin.skinID, @"era": Sk1nEraName(skin.era) ?: @"?"});
                     NSUInteger icons = Sk1nIconEngineInstall(skin);
                     BOOL dock = Sk1nDockPlateInstall(skin);
-                    NSUInteger badges = 0, dots = 0;
+                    NSUInteger badges = 0, dots = 0, status = 0, labels = 0;
                     @try {
                         badges = Sk1nBadgeChromeInstall(skin);
                         dots = Sk1nPageDotsInstall(skin);
+                        status = Sk1nStatusBarInstall(skin);
+                        labels = Sk1nLabelChromeInstall(skin);
                     } @catch (__unused id ex) {}
                     SPKTrace(@"skin_applied", @{@"icon_hooks": @(icons).stringValue, @"dock_hook": dock ? @"1" : @"0",
-                                                @"badge_hooks": @(badges).stringValue, @"pagedots_hooks": @(dots).stringValue});
+                                                @"badge_hooks": @(badges).stringValue, @"pagedots_hooks": @(dots).stringValue,
+                                                @"status_hooks": @(status).stringValue, @"label_hooks": @(labels).stringValue});
                 }
             }
 
