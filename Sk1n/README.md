@@ -6,7 +6,7 @@ One setting + a respring re-skins SpringBoard in a prepackaged era:
 |---------|-----|--------------|
 | `ios1` | iOS 1-6, skeuomorphic: glossy icons (strong top sheen), metallic dock shelf, black status bar, Helvetica-Bold labels | authentic iOS 6 set (zagnut531/iOS-6-Icons, extracted from real devices) + stronger runtime gloss on uncovered apps |
 | `ios7` | iOS 7, flat (no gloss, bright solid colors, simple frosted dock) | Okapi flat pack (JustAnOkapi, Unlicense) + generated flat set |
-| `glass27` | iOS 26/27 Liquid Glass (translucent layered icons, frosted Control Center, material blur) | **Solid Glass 27** (iVintageLover/Solid-Glass) when imported; otherwise the device's real icons |
+| `glass27` | iOS 26/27 Liquid Glass (translucent layered icons, frosted Control Center, material blur) | **Solid Glass 27** (iVintageLover/Solid-Glass v27.1 Light.theme, 172 icons shipped) |
 | `stock` | no skin (default) | untouched |
 
 Bundle id `com.kolby.sk1n`. ObjC-only dylib, SpringBoard filter, rootless (Dopamine) and roothide packages.
