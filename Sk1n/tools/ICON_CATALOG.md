@@ -37,13 +37,13 @@ icons backported for jailbroken devices. The latest release is on the
 
 **How to import:**
 ```bash
-# download the latest .deb (Solid Glass 27 Rootless or Rootful)
-mkdir -p /tmp/sk1n-catalog/Solid-Glass
-dpkg-deb -x path/to/Solid-Glass-*.deb /tmp/sk1n-catalog/Solid-Glass
-# adjust theme_dir in PACKS["solidglass27"] if the IconBundles folder
-# lives deeper after extraction, then:
+# download the latest .deb (Solid Glass 27 Rootless or Rootful) from the releases page
+mkdir -p /tmp/sk1n-catalog
+dpkg-deb -x Solid.Glass.27.Rootless.deb /tmp/sk1n-catalog/Solid-Glass-extract
 python3 tools/import-iconpack.py solidglass27
 ```
+
+The importer targets the Light.theme IconBundles set (172+ icons including many third-party apps). Dark / Clear variants can be swapped by editing the theme_dir in PACKS["solidglass27"].
 
 **Licence:** check the upstream repo / package. Redistributed here as era
 reference for a personal theming package. Authored icons from this pack win

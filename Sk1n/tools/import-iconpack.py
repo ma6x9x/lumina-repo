@@ -20,9 +20,9 @@ The pack's own files are never modified. Usage:
 
 Solid Glass 27 (glass27):
     # download the latest .deb from https://github.com/iVintageLover/Solid-Glass/releases
-    mkdir -p /tmp/sk1n-catalog/Solid-Glass
-    dpkg-deb -x Solid-Glass-*.deb /tmp/sk1n-catalog/Solid-Glass
-    # then point theme_dir at the extracted Anemone/SnowBoard theme folder
+    # (Solid.Glass.27.Rootless.deb or Rootful)
+    mkdir -p /tmp/sk1n-catalog
+    dpkg-deb -x Solid.Glass.27.Rootless.deb /tmp/sk1n-catalog/Solid-Glass-extract
     python3 tools/import-iconpack.py solidglass27
 """
 import sys
@@ -210,10 +210,10 @@ PACKS = {
     "solidglass27": {
         # https://github.com/iVintageLover/Solid-Glass - Solid Glass 27
         # (iOS 26/27 Liquid Glass icons). Extract the .deb first:
-        #   dpkg-deb -x Solid-Glass-*.deb /tmp/sk1n-catalog/Solid-Glass
-        # Then set theme_dir to the extracted Anemone/SnowBoard theme folder
-        # that contains IconBundles/ or Bundles/.
-        "theme_dir": "Solid-Glass",
+        #   mkdir -p /tmp/sk1n-catalog
+        #   dpkg-deb -x Solid.Glass.27.Rootless.deb /tmp/sk1n-catalog/Solid-Glass-extract
+        # Light.theme is the preferred non-clear variant.
+        "theme_dir": "Solid-Glass-extract/var/jb/Library/Themes/Light.theme",
         "era": "glass27",
         "kind": "iconbundles",
     },
