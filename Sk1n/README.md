@@ -23,8 +23,8 @@ Chrome is tuned against real era photos and side-by-sides:
 
 - **Enable Sk1n** - master switch.
 - **Active Skin** - stock / iOS 1-6 / iOS 7 / Liquid Glass.
-- **Slide to Unlock** (`slideToUnlock`, off by default, *experimental*) - enables a **working swipe-up unlock** on the CoverSheet. When on, an upward swipe (distance or velocity) calls `SBLockScreenManager unlockUIFromSource:withOptions:`.
-  - **Slider Style** (`sliderStyle`: auto / ios1 / ios7 / glass27) - if set to anything other than `auto`, also installs the classic visual slider as a secondary control. `auto` follows the skin's own slider config (or installs nothing extra).
+- **Slide to Unlock** (`slideToUnlock`, off by default, *experimental*) - enables a **classic right-swipe unlock** on the CoverSheet. Slide far enough to the right (or flick) and it calls `SBLockScreenManager unlockUIFromSource:withOptions:`.
+  - **Slider Style** (`sliderStyle`: auto / ios1 / ios7 / glass27) - if set to anything other than `auto`, also installs the classic visual slider as a secondary control that uses the same unlock route.
 - **Apply & Respring** - saves and respawns SpringBoard.
 - **Revert to Stock & Respring** - sets skin to `stock`, turns the unlock feature off, respring.
 
@@ -56,11 +56,11 @@ Hooks `-[SBIconImageView contentsImage]` and `-displayedImage`:
 
 See `tools/ICON_CATALOG.md` for sources and licences.
 
-## Unlock (swipe-up)
+## Unlock (classic right-swipe)
 
-When **Slide to Unlock** is enabled, Sk1n installs a vertical pan on `CSCoverSheetViewController`. An upward swipe that travels ~80 pt or has strong upward velocity calls the unlock method. The gesture allows simultaneous recognition so the stock Face ID / dismiss path still works. The classic visual slider is optional and only appears when a style is explicitly chosen.
+When **Slide to Unlock** is enabled, Sk1n installs a horizontal pan on `CSCoverSheetViewController`. Sliding roughly 40 % of the screen width to the right (or a strong rightward flick) calls the unlock method, matching the old iOS 1-6 behavior. The gesture allows simultaneous recognition so Face ID and the stock vertical dismiss still work. The classic visual slider is optional and only appears when a style is explicitly chosen; it uses the same unlock call.
 
-The unlock call is the same one used previously; on a device that has not yet authenticated it may still surface the passcode or Face ID UI. That behavior is expected and is not suppressed.
+On a device that has not yet authenticated, the unlock call may still surface the passcode or Face ID UI. That is expected.
 
 ## Not done yet
 

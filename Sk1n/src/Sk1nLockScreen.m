@@ -41,61 +41,65 @@ static void Sk1nHideHint(UIView *root) {
     }
 }
 
-#pragma mark - Working swipe-up
+#pragma mark - Classic right-swipe unlock
 
-@interface Sk1nSwipeUpHandler : NSObject <UIGestureRecognizerDelegate>
+@interface Sk1nRightSwipeHandler : NSObject <UIGestureRecognizerDelegate>
 @property (nonatomic, weak) UIView *host;
 @end
 
-@implementation Sk1nSwipeUpHandler
+@implementation Sk1nRightSwipeHandler
 
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)g shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)other {
-    return YES; // coexist with stock dismiss / Face ID gestures
+    // Let Face ID / vertical dismiss continue to work; we only claim the horizontal right swipe.
+    return YES;
 }
 
 - (void)handlePan:(UIPanGestureRecognizer *)pan {
-    if (pan.state != UIGestureRecognizerStateEnded && pan.state != UIGestureRecognizerStateCancelled) return;
+    if (pan.state != UIGestureRecognizerStateEnded &&
+        pan.state != UIGestureRecognizerStateCancelled &&
+        pan.state != UIGestureRecognizerStateFailed) return;
 
     CGPoint vel = [pan velocityInView:pan.view];
     CGPoint trans = [pan translationInView:pan.view];
+    CGFloat width = pan.view.bounds.size.width;
+    if (width < 1) return;
 
-    // Upward = negative y. Require either a decent distance or a flick.
-    BOOL farEnough   = trans.y < -80;
-    BOOL fastEnough  = vel.y   < -400;
-    BOOL mostlyVertical = fabs(trans.x) < fabs(trans.y) * 1.4;
+    // Rightward = positive x. Classic slide-to-unlock threshold.
+    BOOL farEnough   = trans.x > width * 0.40;
+    BOOL fastEnough  = vel.x   > 450;
+    BOOL mostlyHorizontal = fabs(trans.y) < fabs(trans.x) * 1.3;
 
-    if ((farEnough || fastEnough) && mostlyVertical) {
-        SPKTrace(@"swipe_up_unlock", @{@"transY": @(trans.y).stringValue, @"velY": @(vel.y).stringValue});
+    if ((farEnough || fastEnough) && mostlyHorizontal && trans.x > 0) {
+        SPKTrace(@"swipe_right_unlock", @{@"transX": @(trans.x).stringValue, @"velX": @(vel.x).stringValue});
         Sk1nAttemptUnlock();
     }
 }
 
 @end
 
-static Sk1nSwipeUpHandler *gSwipeHandler;
+static Sk1nRightSwipeHandler *gRightSwipeHandler;
 
-static void Sk1nInstallSwipeUp(UIViewController *vc) {
+static void Sk1nInstallRightSwipe(UIViewController *vc) {
     UIView *root = vc.view;
     if (!root) return;
 
-    // Avoid double-install
     for (UIGestureRecognizer *g in root.gestureRecognizers) {
         if (g.tag == kSwipeTag) return;
     }
 
-    if (!gSwipeHandler) gSwipeHandler = [Sk1nSwipeUpHandler new];
-    gSwipeHandler.host = root;
+    if (!gRightSwipeHandler) gRightSwipeHandler = [Sk1nRightSwipeHandler new];
+    gRightSwipeHandler.host = root;
 
-    UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc] initWithTarget:gSwipeHandler action:@selector(handlePan:)];
-    pan.delegate = gSwipeHandler;
+    UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc] initWithTarget:gRightSwipeHandler action:@selector(handlePan:)];
+    pan.delegate = gRightSwipeHandler;
     pan.maximumNumberOfTouches = 1;
     pan.tag = kSwipeTag;
     [root addGestureRecognizer:pan];
 
-    SPKTrace(@"swipe_up_installed", nil);
+    SPKTrace(@"swipe_right_installed", nil);
 }
 
-#pragma mark - Optional classic slider
+#pragma mark - Optional classic visual slider
 
 static void Sk1nInstallClassicSlider(UIViewController *vc) {
     if (!gInstallClassic) return;
@@ -130,7 +134,7 @@ static void Sk1nInstallClassicSlider(UIViewController *vc) {
 static void Sk1nOnCoverSheetAppear(UIViewController *vc) {
     if (SPKKillSwitchEngaged(SK1N_SUBDIR)) return;
     @try {
-        Sk1nInstallSwipeUp(vc);
+        Sk1nInstallRightSwipe(vc);
         Sk1nInstallClassicSlider(vc);
     } @catch (NSException *ex) {
         SPKTrace(@"lockscreen_install_exception", @{@"reason": ex.reason ?: @""});
